@@ -148,11 +148,18 @@ func WithExclusiveUserDataFolderAccess(exclusive bool) option {
 		wvep.exclusiveUserDataFolderAccess = exclusive
 	}
 }
+func WithCustomSchemeRegistrations(schema []string) option {
+	return func(wvep *environmentOptions) {
+		wvep.customSchemeRegistrations = schema
+	}
+}
 
 type option func(*environmentOptions)
 
 var _ iCoreWebView2EnvironmentOptions = &environmentOptions{}
 var _ iCoreWebView2EnvironmentOptions2 = &environmentOptions{}
+var _ iCoreWebView2EnvironmentOptions3 = &environmentOptions{}
+var _ iCoreWebView2EnvironmentOptions4 = &environmentOptions{}
 
 type environmentOptions struct {
 	browserExecutableFolder string
@@ -164,6 +171,8 @@ type environmentOptions struct {
 	targetCompatibleBrowserVersion         string
 	allowSingleSignOnUsingOSPrimaryAccount bool
 	exclusiveUserDataFolderAccess          bool
+	customCrashReportingEnabled            bool
+	customSchemeRegistrations              []string
 }
 
 func (o *environmentOptions) AdditionalBrowserArguments() string {
