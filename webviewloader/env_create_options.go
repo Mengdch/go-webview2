@@ -199,6 +199,31 @@ func (o *environmentOptions) ExclusiveUserDataFolderAccess() bool {
 	return o.exclusiveUserDataFolderAccess
 }
 
+func (o *environmentOptions) IsCustomCrashReportingEnabled() bool {
+	return o.customCrashReportingEnabled
+}
+func (o *environmentOptions) CustomSchemeRegistrations() (uint32, uintptr) {
+	count := len(o.customSchemeRegistrations)
+	if count == 0 {
+		return 0, 0
+	}
+	ret, list := combridge.AllocUintptrObject(count)
+	for i, c := range o.customSchemeRegistrations {
+		s := CustomSchemeRegistration{scheme: c}
+		sc := combridge.New[iCoreWebView2CustomSchemeRegistration](&s)
+		list[i] = sc.Ref()
+	}
+
+	a := uint32(len(list))
+	//defer func() {
+	//	for _, l := range list {
+	//		l.Close()
+	//	}
+	//}()
+	//fmt.Println("CustomSchemeRegistrations", list)
+	return a, ret
+}
+
 type iCoreWebView2EnvironmentOptions interface {
 	combridge.IUnknown
 
@@ -212,6 +237,17 @@ type iCoreWebView2EnvironmentOptions2 interface {
 	combridge.IUnknown
 
 	ExclusiveUserDataFolderAccess() bool
+}
+type iCoreWebView2EnvironmentOptions3 interface {
+	combridge.IUnknown
+
+	IsCustomCrashReportingEnabled() bool
+}
+
+type iCoreWebView2EnvironmentOptions4 interface {
+	combridge.IUnknown
+
+	CustomSchemeRegistrations() (uint32, uintptr)
 }
 
 func init() {
@@ -231,6 +267,16 @@ func init() {
 		"{ff85c98a-1ba7-4a6b-90c8-2b752c89e9e2}",
 		_iCoreWebView2EnvironmentOptions2ExclusiveUserDataFolderAccess,
 		_iCoreWebView2EnvironmentOptionsNOP,
+	)
+	combridge.RegisterVTable[combridge.IUnknown, iCoreWebView2EnvironmentOptions3](
+		"{4A5C436E-A9E3-4A2E-89C3-910D3513F5CC}",
+		_iCoreWebView2EnvironmentOptions2IsCustomCrashReportingEnabled,
+		_iCoreWebView2EnvironmentOptionsNOP,
+	)
+	combridge.RegisterVTable[combridge.IUnknown, iCoreWebView2EnvironmentOptions4](
+		"{ac52d13f-0d38-475a-9dca-876580d6793e}",
+		_iCoreWebView2EnvironmentOptions2CustomSchemeRegistrations,
+		_iCoreWebView2EnvironmentOptions2SetCustomSchemeRegistrations,
 	)
 }
 func _iCoreWebView2EnvironmentOptionsNOP(this uintptr) uintptr {

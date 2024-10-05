@@ -3,7 +3,10 @@
 package webviewloader
 
 import (
+	"github.com/Mengdch/win"
 	"github.com/wailsapp/go-webview2/pkg/combridge"
+	"golang.org/x/sys/windows"
+	"unsafe"
 )
 
 // HRESULT
@@ -28,11 +31,34 @@ type iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler interface {
 	combridge.IUnknown
 	ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler
 }
+type iCoreWebView2CustomSchemeRegistration interface {
+	combridge.IUnknown
+	ICoreWebView2CustomSchemeRegistrationIn
+}
+type ICoreWebView2CustomSchemeRegistrationIn interface {
+	GetSchemeName(name *uintptr) uintptr
+	GetTreatAsSecure(name *uintptr) uintptr
+	SetTreatAsSecure(name uintptr) uintptr
+	GetAllowedOrigins(count, value *uintptr) uintptr
+	SetAllowedOrigins(count, value uintptr) uintptr
+	GetHasAuthorityComponent(name *uintptr) uintptr
+	SetHasAuthorityComponent(name uintptr) uintptr
+}
 
 func init() {
 	combridge.RegisterVTable[combridge.IUnknown, iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler](
 		"{4e8a3389-c9d8-4bd2-b6b5-124fee6cc14d}",
 		_iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerInvoke,
+	)
+	combridge.RegisterVTable[combridge.IUnknown, iCoreWebView2CustomSchemeRegistration](
+		"{d60ac92c-37a6-4b26-a39e-95cfe59047bb}",
+		_iCoreWebView2CreateCoreWebView2GetSchemeName,
+		_iCoreWebView2CreateCoreWebView2GetTreatAsSecure,
+		_iCoreWebView2CreateCoreWebView2SetTreatAsSecure,
+		_iCoreWebView2CreateCoreWebView2GetAllowedOrigins,
+		_iCoreWebView2CreateCoreWebView2SetAllowedOrigins,
+		_iCoreWebView2CreateCoreWebView2GetHasAuthorityComponent,
+		_iCoreWebView2CreateCoreWebView2SetHasAuthorityComponent,
 	)
 }
 
