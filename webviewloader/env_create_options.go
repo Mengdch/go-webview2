@@ -313,6 +313,20 @@ func _iCoreWebView2EnvironmentOptions2ExclusiveUserDataFolderAccess(this uintptr
 	return uintptr(windows.S_OK)
 }
 
+func _iCoreWebView2EnvironmentOptions2IsCustomCrashReportingEnabled(this uintptr, value *int32) uintptr {
+	v := combridge.Resolve[iCoreWebView2EnvironmentOptions3](this).IsCustomCrashReportingEnabled()
+	*value = boolToInt(v)
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2EnvironmentOptions2CustomSchemeRegistrations(this uintptr, count *uint32, value *uintptr) uintptr {
+	*count, *value = combridge.Resolve[iCoreWebView2EnvironmentOptions4](this).CustomSchemeRegistrations()
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2EnvironmentOptions2SetCustomSchemeRegistrations(this uintptr, count, value uintptr) uintptr {
+	//fmt.Println("_iCoreWebView2EnvironmentOptions2SetCustomSchemeRegistrations")
+	return uintptr(windows.S_FALSE)
+}
+
 func stringToOleString(v string) *uint16 {
 	wstr := utf16.Encode([]rune(v + "\x00"))
 	lwstr := len(wstr)

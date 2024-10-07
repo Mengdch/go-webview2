@@ -66,3 +66,57 @@ func _iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerInvoke(this uint
 	res := combridge.Resolve[iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler](this).EnvironmentCompleted(errorCode, env)
 	return uintptr(res)
 }
+func _iCoreWebView2CreateCoreWebView2GetSchemeName(this uintptr, name *uintptr) uintptr {
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2GetSchemeName")
+	res := combridge.Resolve[iCoreWebView2CustomSchemeRegistration](this).GetSchemeName(name)
+	return res
+}
+func _iCoreWebView2CreateCoreWebView2GetTreatAsSecure(this uintptr, name *uintptr) uintptr { //BOOL* treatAsSecure
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2GetTreatAsSecure")
+	toBOOL := win.BoolToBOOL(true)
+	*name = uintptr(unsafe.Pointer(&toBOOL))
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2CreateCoreWebView2SetTreatAsSecure(this, name uintptr) uintptr {
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2SetTreatAsSecure")
+
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2CreateCoreWebView2GetAllowedOrigins(this uintptr, count, value *uintptr) uintptr {
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2GetAllowedOrigins")
+	val := []string{} //"*.*"
+	oc := len(val)
+	if oc > 0 {
+		ret, list := combridge.AllocUintptrObject(oc)
+		for i, v := range val {
+			sp := stringToOleString(v)
+			list[i] = uintptr(unsafe.Pointer(sp))
+		}
+		*count = uintptr(unsafe.Pointer(&oc))
+		*value = ret
+	} else {
+		*count, *value = 0, 0
+	}
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2CreateCoreWebView2SetAllowedOrigins(this, count, value uintptr) uintptr {
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2SetAllowedOrigins")
+
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2CreateCoreWebView2GetHasAuthorityComponent(this uintptr, name *uintptr) uintptr { //BOOL* hasAuthorityComponent
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2GetHasAuthorityComponent")
+	toBOOL := win.BoolToBOOL(true)
+	*name = uintptr(unsafe.Pointer(&toBOOL))
+
+	return uintptr(windows.S_OK)
+}
+func _iCoreWebView2CreateCoreWebView2SetHasAuthorityComponent(this, name uintptr) uintptr {
+	//fmt.Println("_iCoreWebView2CreateCoreWebView2SetHasAuthorityComponent")
+
+	return uintptr(windows.S_OK)
+}
+
+type CustomSchemeRegistration struct {
+	scheme string
+}
