@@ -97,14 +97,15 @@ func createWebViewEnvironmentWithClientDll(lpLibFileName string, runtimeType web
 		return err
 	}
 
-	envOptionsCom := combridge.New2[iCoreWebView2EnvironmentOptions, iCoreWebView2EnvironmentOptions2](
-		envOptions, envOptions)
+	envOptionsCom := combridge.New4[iCoreWebView2EnvironmentOptions, iCoreWebView2EnvironmentOptions2,
+		iCoreWebView2EnvironmentOptions3, iCoreWebView2EnvironmentOptions4](
+		envOptions, envOptions, envOptions, envOptions)
 
-	defer envOptionsCom.Close()
+	//defer envOptionsCom.Close()
 
 	envCompletedHandler = &environmentCreatedHandler{envCompletedHandler}
 	envCompletedCom := combridge.New[iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler](envCompletedHandler)
-	defer envCompletedCom.Close()
+	//defer envCompletedCom.Close()
 
 	preventEnvAndRegistryOverrides()
 

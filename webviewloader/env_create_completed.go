@@ -120,3 +120,33 @@ func _iCoreWebView2CreateCoreWebView2SetHasAuthorityComponent(this, name uintptr
 type CustomSchemeRegistration struct {
 	scheme string
 }
+
+func (c *CustomSchemeRegistration) GetSchemeName(name *uintptr) uintptr {
+	//fmt.Println("GetSchemeName")
+	*name = uintptr(unsafe.Pointer(stringToOleString(c.scheme)))
+	return uintptr(windows.S_OK)
+}
+func (c *CustomSchemeRegistration) GetTreatAsSecure(name *uintptr) uintptr {
+	//fmt.Println("GetTreatAsSecure")
+	return uintptr(windows.S_FALSE)
+}
+func (c *CustomSchemeRegistration) SetTreatAsSecure(name uintptr) uintptr {
+	//fmt.Println("SetTreatAsSecure")
+	return uintptr(windows.S_FALSE)
+}
+func (c *CustomSchemeRegistration) GetAllowedOrigins(count, value *uintptr) uintptr {
+	//fmt.Println("GetAllowedOrigins")
+	return uintptr(windows.S_FALSE)
+}
+func (c *CustomSchemeRegistration) SetAllowedOrigins(count, value uintptr) uintptr {
+	//fmt.Println("SetAllowedOrigins")
+	return uintptr(windows.S_FALSE)
+}
+func (c *CustomSchemeRegistration) GetHasAuthorityComponent(name *uintptr) uintptr {
+	//fmt.Println("GetHasAuthorityComponent")
+	return uintptr(windows.S_FALSE)
+}
+func (c *CustomSchemeRegistration) SetHasAuthorityComponent(name uintptr) uintptr {
+	//fmt.Println("SetHasAuthorityComponent")
+	return uintptr(windows.S_FALSE)
+}
