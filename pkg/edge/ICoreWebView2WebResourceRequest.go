@@ -3,7 +3,6 @@
 package edge
 
 import (
-	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -35,11 +34,9 @@ func (i *ICoreWebView2WebResourceRequest) GetMethod() (string, error) {
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&_method)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return "", err
-	}
-	if windows.Handle(res) != windows.S_OK {
-		return "", syscall.Errno(res)
 	}
 	// Get result and cleanup
 	uri := windows.UTF16PtrToString(_method)
@@ -51,13 +48,14 @@ func (i *ICoreWebView2WebResourceRequest) GetUri() (string, error) {
 	var err error
 	// Create *uint16 to hold result
 	var _uri *uint16
-	_, _, err = i.vtbl.GetUri.Call(
+	res, _, err := i.vtbl.GetUri.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&_uri)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return "", err
-	} // Get result and cleanup
+	}
 	uri := windows.UTF16PtrToString(_uri)
 	windows.CoTaskMemFree(unsafe.Pointer(_uri))
 	return uri, nil
@@ -71,11 +69,9 @@ func (i *ICoreWebView2WebResourceRequest) GetContent() (*IStream, error) {
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&stream)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return nil, err
-	}
-	if windows.Handle(res) != windows.S_OK {
-		return nil, syscall.Errno(res)
 	}
 	return stream, nil
 }
@@ -88,12 +84,11 @@ func (i *ICoreWebView2WebResourceRequest) GetHeaders() (*ICoreWebView2HttpReques
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&headers)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return nil, err
 	}
-	if windows.Handle(res) != windows.S_OK {
-		return nil, syscall.Errno(res)
-	}
+
 	return headers, nil
 }
 
