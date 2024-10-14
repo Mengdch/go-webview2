@@ -23,10 +23,6 @@ type ICoreWebView2WebResourceRequestedEventArgs struct {
 	vtbl *_ICoreWebView2WebResourceRequestedEventArgsVtbl
 }
 
-func (i *ICoreWebView2WebResourceRequestedEventArgs) AddRef() uintptr {
-	return i.AddRef()
-}
-
 func (i *ICoreWebView2WebResourceRequestedEventArgs) PutResponse(response *ICoreWebView2WebResourceResponse) error {
 	var err error
 

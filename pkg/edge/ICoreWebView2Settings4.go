@@ -3,40 +3,16 @@
 package edge
 
 import (
-	"errors"
-	"golang.org/x/sys/windows"
-	"syscall"
+	"github.com/Mengdch/win"
 	"unsafe"
 )
 
 type ICoreWebView2Settings4Vtbl struct {
-	_IUnknownVtbl
-	GetIsScriptEnabled                  ComProc
-	PutIsScriptEnabled                  ComProc
-	GetIsWebMessageEnabled              ComProc
-	PutIsWebMessageEnabled              ComProc
-	GetAreDefaultScriptDialogsEnabled   ComProc
-	PutAreDefaultScriptDialogsEnabled   ComProc
-	GetIsStatusBarEnabled               ComProc
-	PutIsStatusBarEnabled               ComProc
-	GetAreDevToolsEnabled               ComProc
-	PutAreDevToolsEnabled               ComProc
-	GetAreDefaultContextMenusEnabled    ComProc
-	PutAreDefaultContextMenusEnabled    ComProc
-	GetAreHostObjectsAllowed            ComProc
-	PutAreHostObjectsAllowed            ComProc
-	GetIsZoomControlEnabled             ComProc
-	PutIsZoomControlEnabled             ComProc
-	GetIsBuiltInErrorPageEnabled        ComProc
-	PutIsBuiltInErrorPageEnabled        ComProc
-	GetUserAgent                        ComProc
-	PutUserAgent                        ComProc
-	GetAreBrowserAcceleratorKeysEnabled ComProc
-	PutAreBrowserAcceleratorKeysEnabled ComProc
-	GetIsPasswordAutosaveEnabled        ComProc
-	PutIsPasswordAutosaveEnabled        ComProc
-	GetIsGeneralAutofillEnabled         ComProc
-	PutIsGeneralAutofillEnabled         ComProc
+	ICoreWebView2Settings3Vtbl
+	GetIsPasswordAutosaveEnabled ComProc
+	PutIsPasswordAutosaveEnabled ComProc
+	GetIsGeneralAutofillEnabled  ComProc
+	PutIsGeneralAutofillEnabled  ComProc
 }
 
 type ICoreWebView2Settings4 struct {
@@ -48,7 +24,7 @@ func (i *ICoreWebView2Settings4) AddRef() uintptr {
 	return refCounter
 }
 
-func (i *ICoreWebViewSettings) GetICoreWebView2Settings4() *ICoreWebView2Settings4 {
+func (i *ICoreWebView2Settings) GetICoreWebView2Settings4() *ICoreWebView2Settings4 {
 	var result *ICoreWebView2Settings4
 
 	iidICoreWebView2Settings4 := NewGUID("{cb56846c-4168-4d53-b04f-03b6d6796ff2}")
@@ -63,68 +39,45 @@ func (i *ICoreWebViewSettings) GetICoreWebView2Settings4() *ICoreWebView2Setting
 func (i *ICoreWebView2Settings4) GetIsPasswordAutosaveEnabled() (bool, error) {
 	// Create int32 to hold bool result
 	var _value int32
-
 	hr, _, err := i.Vtbl.GetIsPasswordAutosaveEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&_value)),
 	)
-	if windows.Handle(hr) != windows.S_OK {
-		return false, syscall.Errno(hr)
+	err = Error(hr, err)
+	if err != nil {
+		return false, err
 	}
 	// Get result and cleanup
-	value := _value != 0
-	return value, err
+	return _value != 0, nil
 }
 
-// PutIsPasswordAutosaveEnabled sets the IsPasswordAutosaveEnabled property.
-// The default value is `FALSE`.
 func (i *ICoreWebView2Settings4) PutIsPasswordAutosaveEnabled(value bool) error {
-
 	hr, _, err := i.Vtbl.PutIsPasswordAutosaveEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(boolToInt(value)),
+		uintptr(win.BoolToBOOL(value)),
 	)
-	if windows.Handle(hr) != windows.S_OK {
-		return syscall.Errno(hr)
-	}
-
-	if !errors.Is(err, windows.ERROR_SUCCESS) {
-		return err
-	}
-
-	return nil
+	return Error(hr, err)
 }
 
 func (i *ICoreWebView2Settings4) GetIsGeneralAutofillEnabled() (bool, error) {
 	// Create int32 to hold bool result
 	var _value int32
-
 	hr, _, err := i.Vtbl.GetIsGeneralAutofillEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&_value)),
 	)
-	if windows.Handle(hr) != windows.S_OK {
-		return false, syscall.Errno(hr)
+	err = Error(hr, err)
+	if err != nil {
+		return false, err
 	}
 	// Get result and cleanup
-	value := _value != 0
-	return value, err
+	return _value != 0, nil
 }
 
 func (i *ICoreWebView2Settings4) PutIsGeneralAutofillEnabled(value bool) error {
-
 	hr, _, err := i.Vtbl.PutIsGeneralAutofillEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(boolToInt(value)),
+		uintptr(win.BoolToBOOL(value)),
 	)
-
-	if windows.Handle(hr) != windows.S_OK {
-		return syscall.Errno(hr)
-	}
-
-	if !errors.Is(err, windows.ERROR_SUCCESS) {
-		return err
-	}
-
-	return nil
+	return Error(hr, err)
 }
