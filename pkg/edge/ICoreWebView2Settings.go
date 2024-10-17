@@ -130,16 +130,11 @@ func (i *ICoreWebView2Settings) GetIsStatusBarEnabled() (bool, error) {
 }
 
 func (i *ICoreWebView2Settings) PutIsStatusBarEnabled(isStatusBarEnabled bool) error {
-	var err error
-
-	_, _, err = i.vtbl.PutIsStatusBarEnabled.Call(
+	hr, _, err := i.vtbl.PutIsStatusBarEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(boolToInt(isStatusBarEnabled)),
 	)
-	if err != windows.ERROR_SUCCESS {
-		return err
-	}
-	return nil
+	return Error(hr, err)
 }
 
 func (i *ICoreWebView2Settings) GetAreDevToolsEnabled() (bool, error) {
@@ -156,15 +151,11 @@ func (i *ICoreWebView2Settings) GetAreDevToolsEnabled() (bool, error) {
 }
 
 func (i *ICoreWebView2Settings) PutAreDevToolsEnabled(areDevToolsEnabled bool) error {
-	var err error
-	_, _, err = i.vtbl.PutAreDevToolsEnabled.Call(
+	hr, _, err := i.vtbl.PutAreDevToolsEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(boolToInt(areDevToolsEnabled)),
 	)
-	if err != windows.ERROR_SUCCESS {
-		return err
-	}
-	return nil
+	return Error(hr, err)
 }
 
 func (i *ICoreWebView2Settings) GetAreDefaultContextMenusEnabled() (bool, error) {
@@ -181,15 +172,11 @@ func (i *ICoreWebView2Settings) GetAreDefaultContextMenusEnabled() (bool, error)
 }
 
 func (i *ICoreWebView2Settings) PutAreDefaultContextMenusEnabled(enabled bool) error {
-	var err error
-	_, _, err = i.vtbl.PutAreDefaultContextMenusEnabled.Call(
+	hr, _, err := i.vtbl.PutAreDefaultContextMenusEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(boolToInt(enabled)),
 	)
-	if err != windows.ERROR_SUCCESS {
-		return err
-	}
-	return nil
+	return Error(hr, err)
 }
 
 func (i *ICoreWebView2Settings) GetAreHostObjectsAllowed() (bool, error) {
@@ -232,16 +219,11 @@ func (i *ICoreWebView2Settings) GetIsZoomControlEnabled() (bool, error) {
 }
 
 func (i *ICoreWebView2Settings) PutIsZoomControlEnabled(enabled bool) error {
-	var err error
-
-	_, _, err = i.vtbl.PutIsZoomControlEnabled.Call(
+	hr, _, err := i.vtbl.PutIsZoomControlEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(boolToInt(enabled)),
 	)
-	if err != windows.ERROR_SUCCESS {
-		return err
-	}
-	return nil
+	return Error(hr, err)
 }
 
 func (i *ICoreWebView2Settings) GetIsBuiltInErrorPageEnabled() (bool, error) {

@@ -3,41 +3,16 @@
 package edge
 
 import (
+	"errors"
 	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
 )
 
 type ICoreWebView2Settings5Vtbl struct {
-	_IUnknownVtbl
-	GetIsScriptEnabled                  ComProc
-	PutIsScriptEnabled                  ComProc
-	GetIsWebMessageEnabled              ComProc
-	PutIsWebMessageEnabled              ComProc
-	GetAreDefaultScriptDialogsEnabled   ComProc
-	PutAreDefaultScriptDialogsEnabled   ComProc
-	GetIsStatusBarEnabled               ComProc
-	PutIsStatusBarEnabled               ComProc
-	GetAreDevToolsEnabled               ComProc
-	PutAreDevToolsEnabled               ComProc
-	GetAreDefaultContextMenusEnabled    ComProc
-	PutAreDefaultContextMenusEnabled    ComProc
-	GetAreHostObjectsAllowed            ComProc
-	PutAreHostObjectsAllowed            ComProc
-	GetIsZoomControlEnabled             ComProc
-	PutIsZoomControlEnabled             ComProc
-	GetIsBuiltInErrorPageEnabled        ComProc
-	PutIsBuiltInErrorPageEnabled        ComProc
-	GetUserAgent                        ComProc
-	PutUserAgent                        ComProc
-	GetAreBrowserAcceleratorKeysEnabled ComProc
-	PutAreBrowserAcceleratorKeysEnabled ComProc
-	GetIsPasswordAutosaveEnabled        ComProc
-	PutIsPasswordAutosaveEnabled        ComProc
-	GetIsGeneralAutofillEnabled         ComProc
-	PutIsGeneralAutofillEnabled         ComProc
-	GetIsPinchZoomEnabled               ComProc
-	PutIsPinchZoomEnabled               ComProc
+	ICoreWebView2Settings4Vtbl
+	GetIsPinchZoomEnabled ComProc
+	PutIsPinchZoomEnabled ComProc
 }
 
 type ICoreWebView2Settings5 struct {
@@ -49,7 +24,7 @@ func (i *ICoreWebView2Settings5) AddRef() uintptr {
 	return refCounter
 }
 
-func (i *ICoreWebViewSettings) GetICoreWebView2Settings5() *ICoreWebView2Settings5 {
+func (i *ICoreWebView2Settings) GetICoreWebView2Settings5() *ICoreWebView2Settings5 {
 	var result *ICoreWebView2Settings5
 
 	iidICoreWebView2Settings5 := NewGUID("{183e7052-1d03-43a0-ab99-98e043b66b39}")
@@ -78,13 +53,12 @@ func (i *ICoreWebView2Settings5) GetIsPinchZoomEnabled() (bool, error) {
 }
 
 func (i *ICoreWebView2Settings5) PutIsPinchZoomEnabled(enabled bool) error {
-
+	if i == nil {
+		return errors.New("setting5")
+	}
 	hr, _, err := i.Vtbl.PutIsPinchZoomEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(&enabled)),
+		uintptr(boolToInt(enabled)),
 	)
-	if windows.Handle(hr) != windows.S_OK {
-		return syscall.Errno(hr)
-	}
-	return err
+	return Error(hr, err)
 }

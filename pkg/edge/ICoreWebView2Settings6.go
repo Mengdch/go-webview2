@@ -3,43 +3,16 @@
 package edge
 
 import (
+	"errors"
 	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
 )
 
 type ICoreWebView2Settings6Vtbl struct {
-	_IUnknownVtbl
-	GetIsScriptEnabled                  ComProc
-	PutIsScriptEnabled                  ComProc
-	GetIsWebMessageEnabled              ComProc
-	PutIsWebMessageEnabled              ComProc
-	GetAreDefaultScriptDialogsEnabled   ComProc
-	PutAreDefaultScriptDialogsEnabled   ComProc
-	GetIsStatusBarEnabled               ComProc
-	PutIsStatusBarEnabled               ComProc
-	GetAreDevToolsEnabled               ComProc
-	PutAreDevToolsEnabled               ComProc
-	GetAreDefaultContextMenusEnabled    ComProc
-	PutAreDefaultContextMenusEnabled    ComProc
-	GetAreHostObjectsAllowed            ComProc
-	PutAreHostObjectsAllowed            ComProc
-	GetIsZoomControlEnabled             ComProc
-	PutIsZoomControlEnabled             ComProc
-	GetIsBuiltInErrorPageEnabled        ComProc
-	PutIsBuiltInErrorPageEnabled        ComProc
-	GetUserAgent                        ComProc
-	PutUserAgent                        ComProc
-	GetAreBrowserAcceleratorKeysEnabled ComProc
-	PutAreBrowserAcceleratorKeysEnabled ComProc
-	GetIsPasswordAutosaveEnabled        ComProc
-	PutIsPasswordAutosaveEnabled        ComProc
-	GetIsGeneralAutofillEnabled         ComProc
-	PutIsGeneralAutofillEnabled         ComProc
-	GetIsPinchZoomEnabled               ComProc
-	PutIsPinchZoomEnabled               ComProc
-	GetIsSwipeNavigationEnabled         ComProc
-	PutIsSwipeNavigationEnabled         ComProc
+	ICoreWebView2Settings5Vtbl
+	GetIsSwipeNavigationEnabled ComProc
+	PutIsSwipeNavigationEnabled ComProc
 }
 
 type ICoreWebView2Settings6 struct {
@@ -51,7 +24,7 @@ func (i *ICoreWebView2Settings6) AddRef() uintptr {
 	return refCounter
 }
 
-func (i *ICoreWebViewSettings) GetICoreWebView2Settings6() *ICoreWebView2Settings6 {
+func (i *ICoreWebView2Settings) GetICoreWebView2Settings6() *ICoreWebView2Settings6 {
 	var result *ICoreWebView2Settings6
 
 	iidICoreWebView2Settings6 := NewGUID("{11cb3acd-9bc8-43b8-83bf-f40753714f87}")
@@ -80,13 +53,12 @@ func (i *ICoreWebView2Settings6) GetIsSwipeNavigationEnabled() (bool, error) {
 }
 
 func (i *ICoreWebView2Settings6) PutIsSwipeNavigationEnabled(enabled bool) error {
-
+	if i == nil {
+		return errors.New("setting6")
+	}
 	hr, _, err := i.Vtbl.PutIsSwipeNavigationEnabled.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(boolToInt(enabled)),
 	)
-	if windows.Handle(hr) != windows.S_OK {
-		return syscall.Errno(hr)
-	}
-	return err
+	return Error(hr, err)
 }
