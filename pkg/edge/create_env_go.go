@@ -8,13 +8,16 @@ import (
 	"github.com/wailsapp/go-webview2/webviewloader"
 )
 
-func createCoreWebView2EnvironmentWithOptions(browserExecutableFolder, userDataFolder string, environmentCompletedHandle *iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler, additionalBrowserArgs string) error {
+func createCoreWebView2EnvironmentWithOptions(browserExecutableFolder, userDataFolder string,
+	environmentCompletedHandle *iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
+	additionalBrowserArgs string, scheme []string) error {
 	e := &environmentCreatedHandler{environmentCompletedHandle}
 	return webviewloader.CreateCoreWebView2EnvironmentWithOptions(
 		e,
 		webviewloader.WithBrowserExecutableFolder(browserExecutableFolder),
 		webviewloader.WithUserDataFolder(userDataFolder),
 		webviewloader.WithAdditionalBrowserArguments(additionalBrowserArgs),
+		webviewloader.WithCustomSchemeRegistrations(scheme),
 	)
 }
 

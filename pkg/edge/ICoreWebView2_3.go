@@ -3,6 +3,7 @@
 package edge
 
 import (
+	"errors"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -59,4 +60,47 @@ func (i *ICoreWebView2) GetICoreWebView2_3() *ICoreWebView2_3 {
 
 func (e *Chromium) GetICoreWebView2_3() *ICoreWebView2_3 {
 	return e.webview.GetICoreWebView2_3()
+}
+func (e *Chromium) TrySuspend() error {
+	if e.webview == nil {
+		return errors.New("webviewNil")
+	}
+	v3 := e.GetICoreWebView2_3()
+	if v3 == nil {
+		return errors.New("GetICoreWebView2_3Nil")
+	}
+	return v3.TrySuspend(e.trySuspendCompleted)
+}
+func (i *ICoreWebView2_3) TrySuspend(handler *ICoreWebView2TrySuspendCompletedHandler) error {
+
+	hr, _, err := i.vtbl.TrySuspend.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(handler)),
+	)
+	return Error(hr, err)
+}
+
+func (i *ICoreWebView2_3) Resume() error {
+
+	hr, _, err := i.vtbl.Resume.Call(
+		uintptr(unsafe.Pointer(i)),
+	)
+	return Error(hr, err)
+}
+
+func (i *ICoreWebView2_3) GetIsSuspended() (bool, error) {
+	// Create int32 to hold bool result
+	var _isSuspended int32
+
+	hr, _, err := i.vtbl.GetIsSuspended.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&_isSuspended)),
+	)
+	err = Error(hr, err)
+	if err != nil {
+		return false, err
+	}
+	// Get result and cleanup
+	isSuspended := _isSuspended != 0
+	return isSuspended, nil
 }
