@@ -35,11 +35,11 @@ func (i *ICoreWebView2) GetICoreWebView2Environment3() *ICoreWebView2Environment
 	return result
 }
 
-func (i *ICoreWebView2Environment3) CreateCoreWebView2CompositionController(ParentWindow HWND, handler *ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler) error {
+func (i *ICoreWebView2Environment3) CreateCoreWebView2CompositionController(parentWindow HWND, handler *ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler) error {
 
 	hr, _, err := i.Vtbl.CreateCoreWebView2CompositionController.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(&ParentWindow)),
+		uintptr(unsafe.Pointer(&parentWindow)),
 		uintptr(unsafe.Pointer(handler)),
 	)
 	if windows.Handle(hr) != windows.S_OK {
@@ -50,14 +50,14 @@ func (i *ICoreWebView2Environment3) CreateCoreWebView2CompositionController(Pare
 
 func (i *ICoreWebView2Environment3) CreateCoreWebView2PointerInfo() (*ICoreWebView2PointerInfo, error) {
 
-	var value *ICoreWebView2PointerInfo
+	var pointerInfo *ICoreWebView2PointerInfo
 
 	hr, _, err := i.Vtbl.CreateCoreWebView2PointerInfo.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(&value)),
+		uintptr(unsafe.Pointer(&pointerInfo)),
 	)
 	if windows.Handle(hr) != windows.S_OK {
 		return nil, syscall.Errno(hr)
 	}
-	return value, err
+	return pointerInfo, err
 }
