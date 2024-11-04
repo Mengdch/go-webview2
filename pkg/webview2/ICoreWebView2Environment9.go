@@ -34,24 +34,24 @@ func (i *ICoreWebView2) GetICoreWebView2Environment9() *ICoreWebView2Environment
 	return result
 }
 
-func (i *ICoreWebView2Environment9) CreateContextMenuItem(Label string, iconStream *IStream, Kind COREWEBVIEW2_CONTEXT_MENU_ITEM_KIND) (*ICoreWebView2ContextMenuItem, error) {
+func (i *ICoreWebView2Environment9) CreateContextMenuItem(label string, iconStream *IStream, kind COREWEBVIEW2_CONTEXT_MENU_ITEM_KIND) (*ICoreWebView2ContextMenuItem, error) {
 
-	// Convert string 'Label' to *uint16
-	_Label, err := UTF16PtrFromString(Label)
+	// Convert string 'label' to *uint16
+	_label, err := UTF16PtrFromString(label)
 	if err != nil {
 		return nil, err
 	}
-	var value *ICoreWebView2ContextMenuItem
+	var item *ICoreWebView2ContextMenuItem
 
 	hr, _, err := i.Vtbl.CreateContextMenuItem.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(_Label)),
+		uintptr(unsafe.Pointer(_label)),
 		uintptr(unsafe.Pointer(iconStream)),
-		uintptr(Kind),
-		uintptr(unsafe.Pointer(&value)),
+		uintptr(kind),
+		uintptr(unsafe.Pointer(&item)),
 	)
 	if windows.Handle(hr) != windows.S_OK {
 		return nil, syscall.Errno(hr)
 	}
-	return value, err
+	return item, err
 }
