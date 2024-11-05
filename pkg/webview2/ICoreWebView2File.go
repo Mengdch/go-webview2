@@ -24,17 +24,17 @@ func (i *ICoreWebView2File) AddRef() uintptr {
 
 func (i *ICoreWebView2File) GetPath() (string, error) {
 	// Create *uint16 to hold result
-	var _value *uint16
+	var _path *uint16
 
 	hr, _, err := i.Vtbl.GetPath.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(_value)),
+		uintptr(unsafe.Pointer(_path)),
 	)
 	if windows.Handle(hr) != windows.S_OK {
 		return "", syscall.Errno(hr)
 	}
 	// Get result and cleanup
-	value := UTF16PtrToString(_value)
-	CoTaskMemFree(unsafe.Pointer(_value))
-	return value, err
+	path := UTF16PtrToString(_path)
+	CoTaskMemFree(unsafe.Pointer(_path))
+	return path, err
 }
