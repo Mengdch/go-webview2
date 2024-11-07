@@ -24,17 +24,17 @@ func (i *ICoreWebView2DevToolsProtocolEventReceivedEventArgs) AddRef() uintptr {
 
 func (i *ICoreWebView2DevToolsProtocolEventReceivedEventArgs) GetParameterObjectAsJson() (string, error) {
 	// Create *uint16 to hold result
-	var _value *uint16
+	var _parameterObjectAsJson *uint16
 
 	hr, _, err := i.Vtbl.GetParameterObjectAsJson.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(_value)),
+		uintptr(unsafe.Pointer(_parameterObjectAsJson)),
 	)
 	if windows.Handle(hr) != windows.S_OK {
 		return "", syscall.Errno(hr)
 	}
 	// Get result and cleanup
-	value := UTF16PtrToString(_value)
-	CoTaskMemFree(unsafe.Pointer(_value))
-	return value, err
+	parameterObjectAsJson := UTF16PtrToString(_parameterObjectAsJson)
+	CoTaskMemFree(unsafe.Pointer(_parameterObjectAsJson))
+	return parameterObjectAsJson, err
 }

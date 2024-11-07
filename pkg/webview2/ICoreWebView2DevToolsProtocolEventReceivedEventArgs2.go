@@ -25,7 +25,7 @@ func (i *ICoreWebView2DevToolsProtocolEventReceivedEventArgs2) AddRef() uintptr 
 func (i *ICoreWebView2) GetICoreWebView2DevToolsProtocolEventReceivedEventArgs2() *ICoreWebView2DevToolsProtocolEventReceivedEventArgs2 {
 	var result *ICoreWebView2DevToolsProtocolEventReceivedEventArgs2
 
-	iidICoreWebView2DevToolsProtocolEventReceivedEventArgs2 := NewGUID("{2dc4959d-1494-4393-95ba-bea4cb9ebd1b}")
+	iidICoreWebView2DevToolsProtocolEventReceivedEventArgs2 := NewGUID("{2DC4959D-1494-4393-95BA-BEA4CB9EBD1B}")
 	_, _, _ = i.Vtbl.QueryInterface.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(iidICoreWebView2DevToolsProtocolEventReceivedEventArgs2)),
@@ -36,17 +36,17 @@ func (i *ICoreWebView2) GetICoreWebView2DevToolsProtocolEventReceivedEventArgs2(
 
 func (i *ICoreWebView2DevToolsProtocolEventReceivedEventArgs2) GetSessionId() (string, error) {
 	// Create *uint16 to hold result
-	var _value *uint16
+	var _sessionId *uint16
 
 	hr, _, err := i.Vtbl.GetSessionId.Call(
 		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(_value)),
+		uintptr(unsafe.Pointer(_sessionId)),
 	)
 	if windows.Handle(hr) != windows.S_OK {
 		return "", syscall.Errno(hr)
 	}
 	// Get result and cleanup
-	value := UTF16PtrToString(_value)
-	CoTaskMemFree(unsafe.Pointer(_value))
-	return value, err
+	sessionId := UTF16PtrToString(_sessionId)
+	CoTaskMemFree(unsafe.Pointer(_sessionId))
+	return sessionId, err
 }
