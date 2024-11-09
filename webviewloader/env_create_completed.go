@@ -3,8 +3,8 @@
 package webviewloader
 
 import (
+	"github.com/Mengdch/go-webview2/pkg/combridge"
 	"github.com/Mengdch/win"
-	"github.com/wailsapp/go-webview2/pkg/combridge"
 	"golang.org/x/sys/windows"
 	"unsafe"
 )
