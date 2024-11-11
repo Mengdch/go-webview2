@@ -84,7 +84,7 @@ func (d *InterfaceDeclaration) generateVtbl(packageName string, w io.Writer) err
 	if d.BaseClass == "IUnknown" {
 		data.BaseClass = ""
 	}
-	mustTemplate("Interface Vtbl", "interfacevtbl.tmpl", &data, w)
+	mustTemplate("Interface vtbl", "interfacevtbl.tmpl", &data, w)
 	return nil
 }
 
