@@ -6,12 +6,13 @@ package edge
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/Mengdch/go-webview2/internal/w32"
@@ -21,10 +22,6 @@ import (
 
 type Rect = w32.Rect
 
-func globalErrorHandler(err error) {
-	println("Error detected in Webview2:\n", err.Error())
-}
-
 type Chromium struct {
 	hwnd                             uintptr
 	controller                       *ICoreWebView2Controller
@@ -32,13 +29,36 @@ type Chromium struct {
 	inited                           uintptr
 	envCompleted                     *iCoreWebView2CreateCoreWebView2EnvironmentCompletedHandler
 	controllerCompleted              *iCoreWebView2CreateCoreWebView2ControllerCompletedHandler
+	compositionCompleted             *ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler
 	webMessageReceived               *iCoreWebView2WebMessageReceivedEventHandler
 	containsFullScreenElementChanged *ICoreWebView2ContainsFullScreenElementChangedEventHandler
 	permissionRequested              *iCoreWebView2PermissionRequestedEventHandler
 	webResourceRequested             *iCoreWebView2WebResourceRequestedEventHandler
 	acceleratorKeyPressed            *ICoreWebView2AcceleratorKeyPressedEventHandler
 	navigationCompleted              *ICoreWebView2NavigationCompletedEventHandler
+	navigationStarting               *ICoreWebView2NavigationStartingEventHandler
+	documentTitleChanged             *ICoreWebView2DocumentTitleChangedEventHandler
+	faviconChanged                   *ICoreWebView2FaviconChangedEventHandler
+	faviconCompleted                 *ICoreWebView2GetFaviconCompletedHandler
+	downloadStart                    *ICoreWebView2DownloadStartingEventHandler
+	downloadStateChanged             *ICoreWebView2StateChangedEventHandler
+	downloadReceivedChanged          *ICoreWebView2BytesReceivedChangedEventHandler
+	sourceChanged                    *ICoreWebView2SourceChangedEventHandler
+	newWindow                        *ICoreWebView2NewWindowRequestedEventHandler
+	historyChanged                   *ICoreWebView2HistoryChangedEventHandler
 	processFailed                    *ICoreWebView2ProcessFailedEventHandler
+	certificateError                 *ICoreWebView2ServerCertificateErrorDetectedEventHandler
+	clearCertificate                 *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler
+	printPdfCompleted                *ICoreWebView2PrintToPdfCompletedHandler
+	callDelMethodCompleted           *ICoreWebView2CallDevToolsProtocolMethodCompletedHandler
+	zoomFactorChanged                *iCoreWebView2ZoomFactorChangedEventHandler
+	focusChanged                     *ICoreWebView2FocusChangedEventHandler
+	lostFocusChanged                 *ICoreWebView2FocusChangedEventHandler
+	contextMenuRequested             *ICoreWebView2ContextMenuRequestedEventHandler
+	windowCloseRequested             *ICoreWebView2WindowCloseRequestedEventHandler
+	responseReceived                 *ICoreWebView2WebResourceResponseReceivedEventHandler
+	trySuspendCompleted              *ICoreWebView2TrySuspendCompletedHandler
+	moveFocusRequested               *ICoreWebView2MoveFocusRequestedEventHandler
 
 	environment            *ICoreWebView2Environment
 	padding                Rect
@@ -49,22 +69,43 @@ type Chromium struct {
 	DataPath              string
 	BrowserPath           string
 	AdditionalBrowserArgs []string
+	Scheme                []string
 
 	// permissions
 	permissions      map[CoreWebView2PermissionKind]CoreWebView2PermissionState
 	globalPermission *CoreWebView2PermissionState
 
 	// Callbacks
-	MessageCallback                          func(string)
-	MessageWithAdditionalObjectsCallback     func(message string, sender *ICoreWebView2, args *ICoreWebView2WebMessageReceivedEventArgs)
-	WebResourceRequestedCallback             func(request *ICoreWebView2WebResourceRequest, args *ICoreWebView2WebResourceRequestedEventArgs)
-	NavigationCompletedCallback              func(sender *ICoreWebView2, args *ICoreWebView2NavigationCompletedEventArgs)
-	ProcessFailedCallback                    func(sender *ICoreWebView2, args *ICoreWebView2ProcessFailedEventArgs)
+	MessageCallback                             func(string)
+	MessageWithAdditionalObjectsCallback        func(message string, sender *ICoreWebView2, args *ICoreWebView2WebMessageReceivedEventArgs)
+	WebResourceRequestedCallback                func(request *ICoreWebView2WebResourceRequest, args *ICoreWebView2WebResourceRequestedEventArgs)
+	NavigationCompletedCallback                 func(sender *ICoreWebView2, args *ICoreWebView2NavigationCompletedEventArgs)
+	NavigationStartingCallback                  func(sender *ICoreWebView2, args *ICoreWebView2NavigationStartingEventArgs)
+	DocumentTitleChangedCallback                func(sender *ICoreWebView2, args *IUnknown)
+	FaviconChangedCallback                      func(sender *ICoreWebView2, args *IUnknown)
+	GetFaviconCompletedCallback                 func(errorCode uintptr, faviconStream *IStream)
+	SourceChangedCallback                       func(sender *ICoreWebView2, args *ICoreWebView2SourceChangedEventArgs)
+	DownloadStartCallback                       func(sender *ICoreWebView2, args *ICoreWebView2DownloadStartingEventArgs)
+	DownloadStateChangedCallback                func(sender *ICoreWebView2DownloadOperation, args *IUnknown)
+	DownloadReceivedChangedCallback             func(sender *ICoreWebView2DownloadOperation, args *IUnknown)
+	NewWindowCallback                           func(sender *ICoreWebView2, args *ICoreWebView2NewWindowRequestedEventArgs)
+	HistoryChangedCallback                      func(sender *ICoreWebView2, args *IUnknown)
+	ProcessFailedCallback                       func(sender *ICoreWebView2, args *ICoreWebView2ProcessFailedEventArgs)
 	ContainsFullScreenElementChangedCallback func(sender *ICoreWebView2, args *ICoreWebView2ContainsFullScreenElementChangedEventArgs)
-	AcceleratorKeyCallback                   func(uint) bool
+	AcceleratorKeyCallback                      func(uint, int) bool
+	CertificateError                            func(sender *ICoreWebView2, args *ICoreWebView2ServerCertificateErrorDetectedEventArgs)
+	ClearCertificate                            func(errorCode uintptr)
+	PrintPdfCompleted                           func(errorCode uintptr, isSuccessful bool)
+	FocusChangedCallback                        func(sender *ICoreWebView2Controller, args *IUnknown)
+	ZoomFactorChangedCallback                   func(sender *ICoreWebView2Controller, args *IUnknown)
+	CallDevToolsProtocolMethodCompletedCallback func(errorCode uintptr, returnObjectAsJson uintptr)
+	ContextMenuRequestedCallback                func(sender *ICoreWebView2, args *ICoreWebView2ContextMenuRequestedEventArgs)
+	WebResourceResponseReceivedCallback         func(sender *ICoreWebView2, args *ICoreWebView2WebResourceResponseReceivedEventArgs)
+	MoveFocusRequestedCallback                  func(sender *ICoreWebView2Controller, args *ICoreWebView2MoveFocusRequestedEventArgs)
+	InitCompletedCallback                       func()
 
-	// Error handling
-	globalErrorCallback func(error)
+	focus bool
+	start time.Time
 }
 
 func NewChromium() *Chromium {
@@ -81,14 +122,38 @@ func NewChromium() *Chromium {
 	 this issue by just pinning the handlers. The https://go-review.googlesource.com/c/go/+/367296/ should land in Go 1.19.
 	*/
 	e.envCompleted = newICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler(e)
+	runtime.KeepAlive(e.envCompleted)
 	e.controllerCompleted = newICoreWebView2CreateCoreWebView2ControllerCompletedHandler(e)
+	runtime.KeepAlive(e.controllerCompleted)
 	e.webMessageReceived = newICoreWebView2WebMessageReceivedEventHandler(e)
 	e.permissionRequested = newICoreWebView2PermissionRequestedEventHandler(e)
 	e.webResourceRequested = newICoreWebView2WebResourceRequestedEventHandler(e)
 	e.acceleratorKeyPressed = newICoreWebView2AcceleratorKeyPressedEventHandler(e)
 	e.navigationCompleted = newICoreWebView2NavigationCompletedEventHandler(e)
+	e.navigationStarting = newICoreWebView2NavigationStartingEventHandler(e)
+	e.documentTitleChanged = newICoreWebView2DocumentTitleChangedEventHandler(e)
+	e.faviconChanged = newICoreWebView2FaviconChangedEventHandler(e)
+	e.downloadStart = newICoreWebView2DownloadStartingEventHandler(e)
+	e.downloadStateChanged = newICoreWebView2StateChangedEventHandler(e)
+	e.downloadReceivedChanged = newICoreWebView2BytesReceivedChangedEventHandler(e)
+	e.sourceChanged = newICoreWebView2SourceChangedEventHandler(e)
+	e.newWindow = newICoreWebView2NewWindowRequestedEventHandler(e)
+	e.historyChanged = newICoreWebView2HistoryChangedEventHandler(e)
+	e.faviconCompleted = newICoreWebView2GetFaviconCompletedHandler(e)
 	e.processFailed = newICoreWebView2ProcessFailedEventHandler(e)
 	e.containsFullScreenElementChanged = newICoreWebView2ContainsFullScreenElementChangedEventHandler(e)
+	e.certificateError = newICoreWebView2ServerCertificateErrorDetectedEventHandler(e)
+	e.clearCertificate = newICoreWebView2ClearServerCertificateErrorActionsCompletedHandler(e)
+	e.printPdfCompleted = newICoreWebView2PrintToPdfCompletedHandler(e)
+	e.zoomFactorChanged = newICoreWebView2ZoomFactorChangedEventHandler(e)
+	e.callDelMethodCompleted = newICoreWebView2CallDevToolsProtocolMethodCompletedHandler(e)
+	e.focusChanged = newICoreWebView2FocusChangedEventHandler(e)
+	e.lostFocusChanged = newICoreWebView2FocusChangedEventHandler(e)
+	e.contextMenuRequested = newICoreWebView2ContextMenuRequestedEventHandler(e)
+	e.windowCloseRequested = newICoreWebView2WindowCloseRequestedEventHandler(e)
+	e.responseReceived = newICoreWebView2WebResourceResponseReceivedEventHandler(e)
+	e.trySuspendCompleted = newICoreWebView2TrySuspendCompletedHandler(e)
+	e.moveFocusRequested = newICoreWebView2MoveFocusRequestedEventHandler(e)
 	/*
 		// Pinner seems to panic in some cases as reported on Discord, maybe during shutdown when GC detects pinned objects
 		// to be released that have not been unpinned.
@@ -106,73 +171,48 @@ func NewChromium() *Chromium {
 		pinner.Pin(e.containsFullScreenElementChanged)
 	*/
 	e.permissions = make(map[CoreWebView2PermissionKind]CoreWebView2PermissionState)
-	e.globalErrorCallback = globalErrorHandler
 
 	return e
 }
 
-func (e *Chromium) errorCallback(err error) {
-	e.globalErrorCallback(err)
-	os.Exit(1)
+func (e *Chromium) Valid() bool {
+	return atomic.LoadUintptr(&e.inited) != 0
 }
-
-func (e *Chromium) SetErrorCallback(callback func(error)) {
-	if callback != nil {
-		e.globalErrorCallback = callback
-	}
-}
-
 func (e *Chromium) Embed(hwnd uintptr) bool {
-
 	var err error
-
 	e.hwnd = hwnd
-
 	dataPath := e.DataPath
 	if dataPath == "" {
 		currentExePath := make([]uint16, windows.MAX_PATH)
-		_, err = windows.GetModuleFileName(windows.Handle(0), &currentExePath[0], windows.MAX_PATH)
+		_, err := windows.GetModuleFileName(windows.Handle(0), &currentExePath[0], windows.MAX_PATH)
 		if err != nil {
-			e.errorCallback(err)
+			// What to do here?
+			return false
 		}
 		currentExeName := filepath.Base(windows.UTF16ToString(currentExePath))
 		dataPath = filepath.Join(os.Getenv("AppData"), currentExeName)
 	}
 
 	if e.BrowserPath != "" {
-		if _, err = os.Stat(e.BrowserPath); errors.Is(err, os.ErrNotExist) {
-			e.errorCallback(fmt.Errorf("browser path '%s' does not exist", e.BrowserPath))
+		if _, err := os.Stat(e.BrowserPath); errors.Is(err, os.ErrNotExist) {
+			fmt.Println("Browser path %s does not exist", e.BrowserPath)
+			return false
 		}
 	}
 
 	browserArgs := strings.Join(e.AdditionalBrowserArgs, " ")
-	if err := createCoreWebView2EnvironmentWithOptions(e.BrowserPath, dataPath, e.envCompleted, browserArgs); err != nil {
-		e.errorCallback(fmt.Errorf("error calling Webview2Loader: %s", err.Error()))
+	e.start = time.Now()
+	if err := createCoreWebView2EnvironmentWithOptions(e.BrowserPath, dataPath, e.envCompleted, browserArgs, e.Scheme); err != nil {
+		fmt.Println("Error calling Webview2Loader: %v", err)
+		return false
 	}
 
 	e.webview2RuntimeVersion, err = webviewloader.GetAvailableCoreWebView2BrowserVersionString(e.BrowserPath)
 	if err != nil {
-		e.errorCallback(fmt.Errorf("error getting Webview2 runtime version: %s", err.Error()))
+		fmt.Println("Error getting Webview2 runtime version: %v", err)
+		return false
 	}
 
-	var msg w32.Msg
-	for {
-		if atomic.LoadUintptr(&e.inited) != 0 {
-			break
-		}
-		r, _, _ := w32.User32GetMessageW.Call(
-			uintptr(unsafe.Pointer(&msg)),
-			0,
-			0,
-			0,
-		)
-		if r == 0 {
-			break
-		}
-		w32.User32TranslateMessage.Call(uintptr(unsafe.Pointer(&msg)))
-		w32.User32DispatchMessageW.Call(uintptr(unsafe.Pointer(&msg)))
-	}
-	e.Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}")
 	return true
 }
 
@@ -193,10 +233,7 @@ func (e *Chromium) Resize() {
 	}
 
 	var bounds w32.Rect
-	_, _, err := w32.User32GetClientRect.Call(e.hwnd, uintptr(unsafe.Pointer(&bounds)))
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
+	w32.User32GetClientRect.Call(e.hwnd, uintptr(unsafe.Pointer(&bounds)))
 
 	bounds.Top += e.padding.Top
 	bounds.Bottom -= e.padding.Bottom
@@ -207,36 +244,25 @@ func (e *Chromium) Resize() {
 }
 
 func (e *Chromium) Navigate(url string) {
-	_, _, err := e.webview.vtbl.Navigate.Call(
+	e.webview.vtbl.Navigate.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(url))),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
 }
 
 func (e *Chromium) NavigateToString(content string) {
-	_, _, err := e.webview.vtbl.NavigateToString.Call(
+	e.webview.vtbl.NavigateToString.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(content))),
 	)
-
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
 }
 
 func (e *Chromium) Init(script string) {
-	_, _, err := e.webview.vtbl.AddScriptToExecuteOnDocumentCreated.Call(
+	e.webview.vtbl.AddScriptToExecuteOnDocumentCreated.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(script))),
 		0,
 	)
-
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
 }
 
 func (e *Chromium) Eval(script string) {
@@ -246,17 +272,19 @@ func (e *Chromium) Eval(script string) {
 	}
 
 	_script, err := windows.UTF16PtrFromString(script)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
+	if err != nil {
+		fmt.Println("Eval", err)
+	} else {
+		//fmt.Println("Eval", script)
 	}
-
-	_, _, err = e.webview.vtbl.ExecuteScript.Call(
+	hr, _, err := e.webview.vtbl.ExecuteScript.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(_script)),
 		0,
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) && !errors.Is(err, windows.ERROR_IO_PENDING) {
-		e.errorCallback(err)
+	err = Error(hr, err)
+	if err != nil {
+		fmt.Println("ExecuteScript", err.Error())
 	}
 }
 
@@ -281,106 +309,119 @@ func (e *Chromium) Release() uintptr {
 }
 
 func (e *Chromium) EnvironmentCompleted(res uintptr, env *ICoreWebView2Environment) uintptr {
+	//fmt.Println("EnvironmentCompleted", time.Now().Sub(e.start))
 	if int32(res) < 0 {
-		e.errorCallback(fmt.Errorf("error creating environmentwith %08x: %s", res, syscall.Errno(res)))
+		fmt.Println("EnvironmentCompleted", "Creating environment failed with %08x: %s", res, syscall.Errno(res))
 	}
-	_, _, err := env.vtbl.AddRef.Call(uintptr(unsafe.Pointer(env)))
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
+	env.vtbl.AddRef.Call(uintptr(unsafe.Pointer(env)))
 	e.environment = env
-
-	_, _, err = env.vtbl.CreateCoreWebView2Controller.Call(
+	e.start = time.Now()
+	env.vtbl.CreateCoreWebView2Controller.Call(
 		uintptr(unsafe.Pointer(env)),
 		e.hwnd,
 		uintptr(unsafe.Pointer(e.controllerCompleted)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
+	//if e.webview2RuntimeVersion
+	//err := e.webview.GetICoreWebView2Environment3().CreateCoreWebView2CompositionController(HWND(e.hwnd), e.compositionCompleted)
+	//if err != nil {
+	//	fmt.Println("CreateCoreWebView2CompositionController", err.Error())
+	//}
 	return 0
 }
 
+func (e *Chromium) CreateCoreWebView2CompositionControllerCompleted(errorCode uintptr, webView *ICoreWebView2CompositionController) uintptr {
+	return 0
+}
 func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller *ICoreWebView2Controller) uintptr {
+	//fmt.Println("CreateCoreWebView2ControllerCompleted", time.Now().Sub(e.start))
 	if int32(res) < 0 {
-		e.errorCallback(fmt.Errorf("error creating controller with %08x: %s", res, syscall.Errno(res)))
+		fmt.Printf("CreateCoreWebView2ControllerCompleted, Creating controller failed with %08x: %s\n", res, syscall.Errno(res))
+		return 1
 	}
-	_, _, err := controller.vtbl.AddRef.Call(uintptr(unsafe.Pointer(controller)))
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
+	controller.vtbl.AddRef.Call(uintptr(unsafe.Pointer(controller)))
 	e.controller = controller
 
 	var token _EventRegistrationToken
-	_, _, err = controller.vtbl.GetCoreWebView2.Call(
+	controller.vtbl.GetCoreWebView2.Call(
 		uintptr(unsafe.Pointer(controller)),
 		uintptr(unsafe.Pointer(&e.webview)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddRef.Call(
+	e.webview.vtbl.AddRef.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddWebMessageReceived.Call(
+	e.webview.vtbl.AddWebMessageReceived.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.webMessageReceived)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddPermissionRequested.Call(
+	e.webview.vtbl.AddPermissionRequested.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.permissionRequested)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddWebResourceRequested.Call(
+	e.webview.vtbl.AddWebResourceRequested.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.webResourceRequested)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddNavigationCompleted.Call(
+	e.webview.vtbl.AddNavigationStarting.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.navigationStarting)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddDocumentTitleChanged.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.documentTitleChanged)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.GetICoreWebView2_15().AddFaviconChanged(e.faviconChanged)
+	e.GetICoreWebView2_4().AddDownloadStarting(e.downloadStart)
+	e.webview.GetICoreWebView2_2().AddWebResourceResponseReceived(e.responseReceived)
+	e.webview.vtbl.AddSourceChanged.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.sourceChanged)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddNewWindowRequested.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.newWindow)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddHistoryChanged.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.historyChanged)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddNavigationCompleted.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.navigationCompleted)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddProcessFailed.Call(
+	e.webview.vtbl.AddProcessFailed.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.processFailed)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
-	_, _, err = e.webview.vtbl.AddContainsFullScreenElementChanged.Call(
+	e.webview.vtbl.AddContainsFullScreenElementChanged.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.containsFullScreenElementChanged)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
+	e.webview.GetICoreWebView2_14().AddServerCertificateErrorDetected(e.certificateError)
+	e.controller.AddZoomFactorChanged(e.zoomFactorChanged)
+	e.controller.AddGotFocus(e.focusChanged)
+	e.controller.AddLostFocus(e.lostFocusChanged)
+	//e.controller.AddMoveFocusRequested(e.moveFocusRequested)
 
-	err = e.controller.AddAcceleratorKeyPressed(e.acceleratorKeyPressed, &token)
-	if err != nil {
-		e.errorCallback(err)
-	}
+	e.controller.AddAcceleratorKeyPressed(e.acceleratorKeyPressed, &token)
+	e.webview.GetICoreWebView2_11().AddContextMenuRequested(e.contextMenuRequested)
+	e.webview.AddWindowCloseRequested(e.windowCloseRequested)
 
 	atomic.StoreUintptr(&e.inited, 1)
-
+	e.Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}")
+	if e.InitCompletedCallback != nil {
+		e.InitCompletedCallback()
+	}
 	return 0
 }
 
@@ -393,20 +434,17 @@ func (e *Chromium) ContainsFullScreenElementChanged(sender *ICoreWebView2, args 
 
 func (e *Chromium) MessageReceived(sender *ICoreWebView2, args *ICoreWebView2WebMessageReceivedEventArgs) uintptr {
 	var _message *uint16
-	_, _, err := args.vtbl.TryGetWebMessageAsString.Call(
+	args.vtbl.TryGetWebMessageAsString.Call(
 		uintptr(unsafe.Pointer(args)),
 		uintptr(unsafe.Pointer(&_message)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
 
 	message := w32.Utf16PtrToString(_message)
 
 	if hasCapability(e.webview2RuntimeVersion, GetAdditionalObjects) {
 		obj, err := args.GetAdditionalObjects()
 		if err != nil {
-			e.errorCallback(err)
+			fmt.Println("MessageReceived", err)
 		}
 
 		if obj != nil && e.MessageWithAdditionalObjectsCallback != nil {
@@ -419,13 +457,10 @@ func (e *Chromium) MessageReceived(sender *ICoreWebView2, args *ICoreWebView2Web
 		e.MessageCallback(message)
 	}
 
-	_, _, err = sender.vtbl.PostWebMessageAsString.Call(
+	sender.vtbl.PostWebMessageAsString.Call(
 		uintptr(unsafe.Pointer(sender)),
 		uintptr(unsafe.Pointer(_message)),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) && !errors.Is(err, windows.ERROR_IO_PENDING) {
-		e.errorCallback(err)
-	}
 	windows.CoTaskMemFree(unsafe.Pointer(_message))
 	return 0
 }
@@ -452,7 +487,7 @@ func (e *Chromium) SetBackgroundColour(R, G, B, A uint8) {
 
 	err := controller2.PutDefaultBackgroundColor(backgroundCol)
 	if err != nil {
-		e.errorCallback(err)
+		fmt.Println("SetBackgroundColour", err)
 	}
 }
 
@@ -462,13 +497,10 @@ func (e *Chromium) SetGlobalPermission(state CoreWebView2PermissionState) {
 
 func (e *Chromium) PermissionRequested(_ *ICoreWebView2, args *iCoreWebView2PermissionRequestedEventArgs) uintptr {
 	var kind CoreWebView2PermissionKind
-	_, _, err := args.vtbl.GetPermissionKind.Call(
+	args.vtbl.GetPermissionKind.Call(
 		uintptr(unsafe.Pointer(args)),
 		uintptr(kind),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
 	var result CoreWebView2PermissionState
 	if e.globalPermission != nil {
 		result = *e.globalPermission
@@ -479,20 +511,18 @@ func (e *Chromium) PermissionRequested(_ *ICoreWebView2, args *iCoreWebView2Perm
 			result = CoreWebView2PermissionStateDefault
 		}
 	}
-	_, _, err = args.vtbl.PutState.Call(
+	args.vtbl.PutState.Call(
 		uintptr(unsafe.Pointer(args)),
 		uintptr(result),
 	)
-	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
-		e.errorCallback(err)
-	}
 	return 0
 }
 
 func (e *Chromium) WebResourceRequested(sender *ICoreWebView2, args *ICoreWebView2WebResourceRequestedEventArgs) uintptr {
 	req, err := args.GetRequest()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("WebResourceRequested", err)
+		return 0
 	}
 	defer req.Release()
 
@@ -505,12 +535,30 @@ func (e *Chromium) WebResourceRequested(sender *ICoreWebView2, args *ICoreWebVie
 func (e *Chromium) AddWebResourceRequestedFilter(filter string, ctx COREWEBVIEW2_WEB_RESOURCE_CONTEXT) {
 	err := e.webview.AddWebResourceRequestedFilter(filter, ctx)
 	if err != nil {
-		e.errorCallback(err)
+		fmt.Println("AddWebResourceRequestedFilter", err)
 	}
 }
 
 func (e *Chromium) Environment() *ICoreWebView2Environment {
 	return e.environment
+}
+func (e *Chromium) ClearServerCertificateErrorActionsCompleted(errorCode uintptr) uintptr {
+	if e.ClearCertificate != nil {
+		e.ClearCertificate(errorCode)
+	}
+	return 0
+}
+func (e *Chromium) PrintToPdfCompleted(errorCode uintptr, isSuccessful bool) uintptr {
+	if e.PrintPdfCompleted != nil {
+		e.PrintPdfCompleted(errorCode, isSuccessful)
+	}
+	return 0
+}
+func (e *Chromium) ServerCertificateErrorDetected(sender *ICoreWebView2, args *ICoreWebView2ServerCertificateErrorDetectedEventArgs) uintptr {
+	if e.CertificateError != nil {
+		e.CertificateError(sender, args)
+	}
+	return 0
 }
 
 // AcceleratorKeyPressed is called when an accelerator key is pressed.
@@ -524,24 +572,24 @@ func (e *Chromium) AcceleratorKeyPressed(sender *ICoreWebView2Controller, args *
 	if eventKind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN ||
 		eventKind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN {
 		virtualKey, _ := args.GetVirtualKey()
+		lParam, _ := args.GetKeyEventLParam()
 		status, _ := args.GetPhysicalKeyStatus()
 		if !status.WasKeyDown {
-			err := args.PutHandled(e.AcceleratorKeyCallback(virtualKey))
-			if err != nil {
-				e.errorCallback(err)
-			}
-		} else {
+			args.PutHandled(e.AcceleratorKeyCallback(virtualKey, lParam))
 			return 0
 		}
 	}
-	err := args.PutHandled(false)
-	if err != nil {
-		e.errorCallback(err)
+	args.PutHandled(false)
+	return 0
+}
+func (e *Chromium) FocusChanged(sender *ICoreWebView2Controller, args *IUnknown) uintptr {
+	e.focus = !e.focus
+	if e.FocusChangedCallback != nil {
+		e.FocusChangedCallback(sender, args)
 	}
 	return 0
 }
-
-func (e *Chromium) GetSettings() (*ICoreWebViewSettings, error) {
+func (e *Chromium) GetSettings() (*ICoreWebView2Settings, error) {
 	return e.webview.GetSettings()
 }
 
@@ -559,6 +607,61 @@ func boolToInt(input bool) int {
 func (e *Chromium) NavigationCompleted(sender *ICoreWebView2, args *ICoreWebView2NavigationCompletedEventArgs) uintptr {
 	if e.NavigationCompletedCallback != nil {
 		e.NavigationCompletedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) NavigationStarting(sender *ICoreWebView2, args *ICoreWebView2NavigationStartingEventArgs) uintptr {
+	if e.NavigationStartingCallback != nil {
+		e.NavigationStartingCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) DocumentTitleChanged(sender *ICoreWebView2, args *IUnknown) uintptr {
+	if e.DocumentTitleChangedCallback != nil {
+		e.DocumentTitleChangedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) FaviconChanged(sender *ICoreWebView2, args *IUnknown) uintptr {
+	if e.FaviconChangedCallback != nil {
+		e.FaviconChangedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) GetFaviconCompleted(errorCode uintptr, faviconStream *IStream) uintptr {
+	if e.GetFaviconCompletedCallback != nil {
+		e.GetFaviconCompletedCallback(errorCode, faviconStream)
+	}
+	return 0
+}
+func (e *Chromium) SourceChanged(sender *ICoreWebView2, args *ICoreWebView2SourceChangedEventArgs) uintptr {
+	if e.SourceChangedCallback != nil {
+		e.SourceChangedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) DownloadStarting(sender *ICoreWebView2, args *ICoreWebView2DownloadStartingEventArgs) uintptr {
+	if e.DownloadStartCallback != nil {
+		e.DownloadStartCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) StateChanged(sender *ICoreWebView2DownloadOperation, args *IUnknown) uintptr {
+	if e.DownloadStateChangedCallback != nil {
+		e.DownloadStateChangedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) BytesReceivedChanged(sender *ICoreWebView2DownloadOperation, args *IUnknown) uintptr {
+	if e.DownloadReceivedChangedCallback != nil {
+		e.DownloadReceivedChangedCallback(sender, args)
+	}
+	return 0
+}
+
+func (e *Chromium) HistoryChanged(sender *ICoreWebView2, args *IUnknown) uintptr {
+	if e.HistoryChangedCallback != nil {
+		e.HistoryChangedCallback(sender, args)
 	}
 	return 0
 }
@@ -582,22 +685,50 @@ func (e *Chromium) NotifyParentWindowPositionChanged() error {
 func (e *Chromium) Focus() {
 	err := e.controller.MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC)
 	if err != nil {
-		e.errorCallback(err)
+		fmt.Println("Focus", err)
 	}
 }
 
+func (e *Chromium) GetZoomFactor() float64 {
+	val, err := e.controller.GetZoomFactor()
+	if err != nil {
+		fmt.Println("GetZoomFactor", err)
+	}
+	return val
+}
 func (e *Chromium) PutZoomFactor(zoomFactor float64) {
 	err := e.controller.PutZoomFactor(zoomFactor)
 	if err != nil {
-		e.errorCallback(err)
+		fmt.Println("PutZoomFactor", err)
 	}
 }
 
 func (e *Chromium) OpenDevToolsWindow() {
-	err := e.webview.OpenDevToolsWindow()
-	if err != nil {
-		e.errorCallback(err)
-	}
+	e.webview.OpenDevToolsWindow()
+}
+func (e *Chromium) Title() (string, error) {
+	return e.webview.Title()
+}
+func (e *Chromium) Url() (string, error) {
+	return e.webview.Url()
+}
+
+func (e *Chromium) Reload() {
+	e.webview.Reload()
+}
+
+func (e *Chromium) Stop() {
+	e.webview.Stop()
+}
+
+func (e *Chromium) GoBack() {
+	e.webview.GoBack()
+}
+func (e *Chromium) GoForward() {
+	e.webview.GoForward()
+}
+func (e *Chromium) CallDevToolsProtocolMethod(methodName, parametersAsJson string) {
+	e.webview.CallDevToolsProtocolMethod(methodName, parametersAsJson, e.callDelMethodCompleted)
 }
 
 func (e *Chromium) HasCapability(c Capability) bool {
@@ -615,45 +746,10 @@ func (e *Chromium) GetIsSwipeNavigationEnabled() (bool, error) {
 	webview2Settings6 := webview2Settings.GetICoreWebView2Settings6()
 	var result bool
 	result, err = webview2Settings6.GetIsSwipeNavigationEnabled()
-	if !errors.Is(err, windows.DS_S_SUCCESS) {
+	if err != windows.DS_S_SUCCESS {
 		return false, err
 	}
 	return result, nil
-}
-
-// PutIsGeneralAutofillEnabled controls whether autofill for information
-// like names, street and email addresses, phone numbers, and arbitrary input
-// is enabled. This excludes password and credit card information. When
-// IsGeneralAutofillEnabled is false, no suggestions appear, and no new information
-// is saved. When IsGeneralAutofillEnabled is true, information is saved, suggestions
-// appear and clicking on one will populate the form fields.
-// It will take effect immediately after setting.
-// The default value is `FALSE`.
-func (e *Chromium) PutIsGeneralAutofillEnabled(value bool) error {
-	if !hasCapability(e.webview2RuntimeVersion, GeneralAutofillEnabled) {
-		return UnsupportedCapabilityError
-	}
-	webview2Settings, err := e.webview.GetSettings()
-	if err != nil {
-		return err
-	}
-	webview2Settings4 := webview2Settings.GetICoreWebView2Settings4()
-	return webview2Settings4.PutIsGeneralAutofillEnabled(value)
-}
-
-// PutIsPasswordAutosaveEnabled sets whether the browser should offer to save passwords and other
-// identifying information entered into forms automatically.
-// The default value is `FALSE`.
-func (e *Chromium) PutIsPasswordAutosaveEnabled(value bool) error {
-	if !hasCapability(e.webview2RuntimeVersion, PasswordAutosaveEnabled) {
-		return UnsupportedCapabilityError
-	}
-	webview2Settings, err := e.webview.GetSettings()
-	if err != nil {
-		return err
-	}
-	webview2Settings4 := webview2Settings.GetICoreWebView2Settings4()
-	return webview2Settings4.PutIsPasswordAutosaveEnabled(value)
 }
 
 func (e *Chromium) PutIsSwipeNavigationEnabled(enabled bool) error {
@@ -666,7 +762,7 @@ func (e *Chromium) PutIsSwipeNavigationEnabled(enabled bool) error {
 	}
 	webview2Settings6 := webview2Settings.GetICoreWebView2Settings6()
 	err = webview2Settings6.PutIsSwipeNavigationEnabled(enabled)
-	if !errors.Is(err, windows.DS_S_SUCCESS) {
+	if err != windows.DS_S_SUCCESS {
 		return err
 	}
 	return nil
@@ -679,12 +775,39 @@ func (e *Chromium) AllowExternalDrag(allow bool) error {
 	controller := e.GetController()
 	controller4 := controller.GetICoreWebView2Controller4()
 	err := controller4.PutAllowExternalDrop(allow)
-	if !errors.Is(err, windows.DS_S_SUCCESS) {
+	if err != windows.DS_S_SUCCESS {
 		return err
 	}
 	return nil
 }
 
+func (e *Chromium) SetMuted(allow bool) error {
+	return e.webview.SetMuted(allow)
+}
+
+func (e *Chromium) NewWindowRequested(sender *ICoreWebView2, args *ICoreWebView2NewWindowRequestedEventArgs) uintptr {
+	if e.NewWindowCallback != nil {
+		e.NewWindowCallback(sender, args)
+	}
+	return 0
+}
+
+func (e *Chromium) FaviconCompleted() *ICoreWebView2GetFaviconCompletedHandler {
+	return e.faviconCompleted
+}
+func (e *Chromium) ClearCertificateCompleted() *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler {
+	return e.clearCertificate
+}
+func (e *Chromium) DownloadStateChanged() *ICoreWebView2StateChangedEventHandler {
+	return e.downloadStateChanged
+
+}
+func (e *Chromium) DownloadReceivedChanged() *ICoreWebView2BytesReceivedChangedEventHandler {
+	return e.downloadReceivedChanged
+}
+func (e *Chromium) PrintToPdf(fp string) error {
+	return e.GetICoreWebView2_7().PrintToPdf(fp, nil, e.printPdfCompleted)
+}
 func (e *Chromium) GetAllowExternalDrag() (bool, error) {
 	if !hasCapability(e.webview2RuntimeVersion, AllowExternalDrop) {
 		return false, UnsupportedCapabilityError
@@ -692,8 +815,55 @@ func (e *Chromium) GetAllowExternalDrag() (bool, error) {
 	controller := e.GetController()
 	controller4 := controller.GetICoreWebView2Controller4()
 	result, err := controller4.GetAllowExternalDrop()
-	if !errors.Is(err, windows.DS_S_SUCCESS) {
+	if err != windows.DS_S_SUCCESS {
 		return false, err
 	}
 	return result, nil
+}
+func (e *Chromium) ZoomFactorChanged(sender *ICoreWebView2Controller, args *IUnknown) uintptr {
+	if e.ZoomFactorChangedCallback != nil {
+		e.ZoomFactorChangedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) CallDevToolsProtocolMethodCompleted(errorCode uintptr, returnObjectAsJson uintptr) uintptr {
+	if e.CallDevToolsProtocolMethodCompletedCallback != nil {
+		e.CallDevToolsProtocolMethodCompletedCallback(errorCode, returnObjectAsJson)
+	}
+	return 0
+}
+func (e *Chromium) ContextMenuRequested(sender *ICoreWebView2, args *ICoreWebView2ContextMenuRequestedEventArgs) uintptr {
+	if e.ContextMenuRequestedCallback != nil {
+		e.ContextMenuRequestedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) Focused() bool {
+	return e.focus
+}
+func (e *Chromium) Close() {
+	if e.controller != nil {
+		e.controller.Close()
+	}
+}
+func (e *Chromium) WindowCloseRequested(sender *ICoreWebView2, args *IUnknown) uintptr {
+	url, err := sender.Url()
+	fmt.Println("WindowCloseRequested", url, err)
+	return 0
+}
+func (e *Chromium) WebResourceResponseReceived(sender *ICoreWebView2, args *ICoreWebView2WebResourceResponseReceivedEventArgs) uintptr {
+	if e.WebResourceResponseReceivedCallback != nil {
+		e.WebResourceResponseReceivedCallback(sender, args)
+	}
+	return 0
+}
+func (e *Chromium) TrySuspendCompleted(errorCode uintptr, isSuccessful bool) uintptr {
+	fmt.Println("TrySuspendCompleted", errorCode, isSuccessful)
+	return 0
+}
+func (e *Chromium) MoveFocusRequested(sender *ICoreWebView2Controller, args *ICoreWebView2MoveFocusRequestedEventArgs) uintptr {
+	if e.MoveFocusRequestedCallback != nil {
+		e.MoveFocusRequestedCallback(sender, args)
+	}
+	return 0
 }

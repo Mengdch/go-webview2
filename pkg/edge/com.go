@@ -4,6 +4,7 @@ package edge
 
 import (
 	"golang.org/x/sys/windows"
+	"syscall"
 	"unsafe"
 )
 
@@ -79,4 +80,14 @@ func UTF16PtrToString(s *uint16) string {
 
 func CoTaskMemFree(pv unsafe.Pointer) {
 	windows.CoTaskMemFree(pv)
+}
+
+func Error(hr uintptr, err error) error {
+	if err != ERROR_SUCCESS {
+		if windows.Handle(hr) != windows.S_OK {
+			return syscall.Errno(hr)
+		}
+		return err
+	}
+	return nil
 }

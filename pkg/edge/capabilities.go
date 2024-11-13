@@ -16,11 +16,10 @@ func (u *unsupportedCapabilityError) Error() string {
 // Internal Capabilities are not exposed to the user
 // Larger capabilities such as DragAndDrop should be exported with a capital letter
 const (
-	GetAdditionalObjects    = Capability("113.0.1774.30")
-	SwipeNavigation         = Capability("94.0.992.31")
-	AllowExternalDrop       = Capability("100.0.1185.39") // 1.0.1823.32
-	GeneralAutofillEnabled  = Capability("100.0.1185.39") // 1.0.1823.32
-	PasswordAutosaveEnabled = Capability("100.0.1185.39") // 1.0.1823.32
+	GetAdditionalObjects = Capability("113.0.1774.30")
+	SwipeNavigation      = Capability("94.0.992.31")
+	AllowExternalDrop    = Capability("100.0.1185.39")
+	//AllowMouse           = Capability("120.0.1185.39")
 )
 
 func hasCapability(webview2RuntimeVersion string, capability Capability) bool {
