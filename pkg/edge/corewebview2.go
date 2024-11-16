@@ -5,6 +5,7 @@ package edge
 
 import (
 	"fmt"
+	"github.com/Mengdch/win"
 	"log"
 	"runtime"
 	"syscall"
@@ -194,9 +195,9 @@ type ICoreWebView2 struct {
 	vtbl *iCoreWebView2Vtbl
 }
 
-func (i *ICoreWebView2) GetSettings() (*ICoreWebViewSettings, error) {
+func (i *ICoreWebView2) GetSettings() (*ICoreWebView2Settings, error) {
 	var err error
-	var settings *ICoreWebViewSettings
+	var settings *ICoreWebView2Settings
 	_, _, err = i.vtbl.GetSettings.Call(
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&settings)),
@@ -442,6 +443,34 @@ func (i *ICoreWebView2) AddProcessFailed(eventHandler *ICoreWebView2ProcessFaile
 	return nil
 }
 
+func (i *ICoreWebView2) Title() (string, error) {
+	var err error
+	var ut *uint16
+	_, _, err = i.vtbl.GetDocumentTitle.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&ut)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return "", err
+	}
+	title := windows.UTF16PtrToString(ut)
+	windows.CoTaskMemFree(unsafe.Pointer(ut))
+	return title, nil
+}
+func (i *ICoreWebView2) Url() (string, error) {
+	var err error
+	var ut *uint16
+	_, _, err = i.vtbl.GetSource.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&ut)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return "", err
+	}
+	title := windows.UTF16PtrToString(ut)
+	windows.CoTaskMemFree(unsafe.Pointer(ut))
+	return title, nil
+}
 func (i *ICoreWebView2) OpenDevToolsWindow() error {
 	var err error
 	_, _, err = i.vtbl.OpenDevToolsWindow.Call(
@@ -451,4 +480,119 @@ func (i *ICoreWebView2) OpenDevToolsWindow() error {
 		return err
 	}
 	return nil
+}
+func (i *ICoreWebView2) Reload() error {
+	var err error
+	_, _, err = i.vtbl.Reload.Call(
+		uintptr(unsafe.Pointer(i)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+func (i *ICoreWebView2) Stop() error {
+	var err error
+	_, _, err = i.vtbl.Stop.Call(
+		uintptr(unsafe.Pointer(i)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+func (i *ICoreWebView2) GoBack() error {
+	var err error
+	_, _, err = i.vtbl.GoBack.Call(
+		uintptr(unsafe.Pointer(i)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+func (i *ICoreWebView2) GoForward() error {
+	var err error
+	_, _, err = i.vtbl.GoForward.Call(
+		uintptr(unsafe.Pointer(i)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+func (i *ICoreWebView2) CanGoBack() (bool, error) {
+	var err error
+	var can win.BOOL
+	_, _, err = i.vtbl.GetCanGoBack.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&can)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return false, err
+	}
+	return win.BOOL2Bool(can), nil
+}
+func (i *ICoreWebView2) CanGoForward() (bool, error) {
+	var err error
+	var can win.BOOL
+	_, _, err = i.vtbl.GetCanGoForward.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&can)),
+	)
+	if err != windows.ERROR_SUCCESS {
+		return false, err
+	}
+	return win.BOOL2Bool(can), nil
+}
+func (i *ICoreWebView2) SetMuted(val bool) error {
+	err := i.GetICoreWebView2_8().SetIsMuted(val)
+	if err != windows.ERROR_SUCCESS {
+		return err
+	}
+	return nil
+}
+func (i *ICoreWebView2) GetFaviconUri() (string, error) {
+	return i.GetICoreWebView2_15().GetFaviconUri()
+}
+func (i *ICoreWebView2) GetFavicon(format COREWEBVIEW2_FAVICON_IMAGE_FORMAT, completedHandler *ICoreWebView2GetFaviconCompletedHandler) error {
+	return i.GetICoreWebView2_15().GetFavicon(format, completedHandler)
+}
+func (i *ICoreWebView2) CallDevToolsProtocolMethod(methodName string, parametersAsJson string, handler *ICoreWebView2CallDevToolsProtocolMethodCompletedHandler) error {
+
+	// Convert string 'methodName' to *uint16
+	_methodName, err := UTF16PtrFromString(methodName)
+	if err != nil {
+		return err
+	}
+	// Convert string 'parametersAsJson' to *uint16
+	_parametersAsJson, err := UTF16PtrFromString(parametersAsJson)
+	if err != nil {
+		return err
+	}
+
+	hr, _, err := i.vtbl.CallDevToolsProtocolMethod.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(_methodName)),
+		uintptr(unsafe.Pointer(_parametersAsJson)),
+		uintptr(unsafe.Pointer(handler)),
+	)
+	if windows.Handle(hr) != windows.S_OK {
+		return syscall.Errno(hr)
+	}
+	return err
+}
+func (i *ICoreWebView2) AddWindowCloseRequested(eventHandler *ICoreWebView2WindowCloseRequestedEventHandler) (EventRegistrationToken, error) {
+
+	var token EventRegistrationToken
+
+	hr, _, err := i.vtbl.AddWindowCloseRequested.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(eventHandler)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	if windows.Handle(hr) != windows.S_OK {
+		return EventRegistrationToken{}, syscall.Errno(hr)
+	}
+	return token, err
 }
