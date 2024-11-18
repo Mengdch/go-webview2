@@ -3,6 +3,7 @@
 package edge
 
 import (
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -20,10 +21,6 @@ type _ICoreWebView2AcceleratorKeyPressedEventArgsVtbl struct {
 
 type ICoreWebView2AcceleratorKeyPressedEventArgs struct {
 	vtbl *_ICoreWebView2AcceleratorKeyPressedEventArgsVtbl
-}
-
-func (i *ICoreWebView2AcceleratorKeyPressedEventArgs) AddRef() uintptr {
-	return i.AddRef()
 }
 
 func (i *ICoreWebView2AcceleratorKeyPressedEventArgs) GetKeyEventKind() (COREWEBVIEW2_KEY_EVENT_KIND, error) {
@@ -50,6 +47,20 @@ func (i *ICoreWebView2AcceleratorKeyPressedEventArgs) GetVirtualKey() (uint, err
 		return 0, err
 	}
 	return virtualKey, nil
+}
+
+func (i *ICoreWebView2AcceleratorKeyPressedEventArgs) GetKeyEventLParam() (int, error) {
+
+	var lParam int
+
+	hr, _, err := i.vtbl.GetKeyEventLParam.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&lParam)),
+	)
+	if windows.Handle(hr) != windows.S_OK {
+		return 0, syscall.Errno(hr)
+	}
+	return lParam, err
 }
 
 func (i *ICoreWebView2AcceleratorKeyPressedEventArgs) GetPhysicalKeyStatus() (COREWEBVIEW2_PHYSICAL_KEY_STATUS, error) {
