@@ -12,9 +12,6 @@ type ICoreWebView2ContainsFullScreenElementChangedEventHandler struct {
 	impl _ICoreWebView2ContainsFullScreenElementChangedEventHandlerImpl
 }
 
-func (i *ICoreWebView2ContainsFullScreenElementChangedEventHandler) AddRef() uintptr {
-	return i.AddRef()
-}
 func _ICoreWebView2ContainsFullScreenElementChangedEventHandlerIUnknownQueryInterface(this *ICoreWebView2ContainsFullScreenElementChangedEventHandler, refiid, object uintptr) uintptr {
 	return this.impl.QueryInterface(refiid, object)
 }
@@ -45,7 +42,7 @@ var _ICoreWebView2ContainsFullScreenElementChangedEventHandlerFn = _ICoreWebView
 	NewComProc(_ICoreWebView2ContainsFullScreenElementChangedEventHandlerInvoke),
 }
 
-func newICoreWebView2ContainsFullScreenElementChangedEventHandler(impl *Chromium) *ICoreWebView2ContainsFullScreenElementChangedEventHandler {
+func newICoreWebView2ContainsFullScreenElementChangedEventHandler(impl _ICoreWebView2ContainsFullScreenElementChangedEventHandlerImpl) *ICoreWebView2ContainsFullScreenElementChangedEventHandler {
 	return &ICoreWebView2ContainsFullScreenElementChangedEventHandler{
 		vtbl: &_ICoreWebView2ContainsFullScreenElementChangedEventHandlerFn,
 		impl: impl,
