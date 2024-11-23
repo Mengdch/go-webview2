@@ -48,11 +48,9 @@ func (i *ICoreWebView2HttpHeadersCollectionIterator) GetCurrentHeader() (string,
 		uintptr(unsafe.Pointer(&_name)),
 		uintptr(unsafe.Pointer(&_value)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return "", "", err
-	}
-	if windows.Handle(res) != windows.S_OK {
-		return "", "", syscall.Errno(res)
 	}
 	// Get result and cleanup
 	name := windows.UTF16PtrToString(_name)
@@ -68,7 +66,8 @@ func (i *ICoreWebView2HttpHeadersCollectionIterator) MoveNext() (bool, error) {
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&next)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return false, err
 	}
 	if windows.Handle(res) != windows.S_OK {
