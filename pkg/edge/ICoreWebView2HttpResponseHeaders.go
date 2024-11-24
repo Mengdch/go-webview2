@@ -48,3 +48,14 @@ func (i *ICoreWebView2HttpResponseHeaders) AppendHeader(name string, value strin
 	}
 	return nil
 }
+
+func (i *ICoreWebView2HttpResponseHeaders) GetIterator() (*ICoreWebView2HttpHeadersCollectionIterator, error) {
+
+	var iterator *ICoreWebView2HttpHeadersCollectionIterator
+
+	hr, _, err := i.vtbl.GetIterator.Call(
+		uintptr(unsafe.Pointer(i)),
+		uintptr(unsafe.Pointer(&iterator)),
+	)
+	return iterator, Error(hr, err)
+}

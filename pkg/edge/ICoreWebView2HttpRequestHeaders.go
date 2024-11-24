@@ -91,11 +91,9 @@ func (i *ICoreWebView2HttpRequestHeaders) GetIterator() (*ICoreWebView2HttpHeade
 		uintptr(unsafe.Pointer(i)),
 		uintptr(unsafe.Pointer(&headers)),
 	)
-	if err != windows.ERROR_SUCCESS {
+	err = Error(res, err)
+	if err != nil {
 		return nil, err
-	}
-	if windows.Handle(res) != windows.S_OK {
-		return nil, syscall.Errno(res)
 	}
 	return headers, nil
 }

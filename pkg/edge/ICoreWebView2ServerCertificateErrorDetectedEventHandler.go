@@ -1,0 +1,50 @@
+//go:build windows
+
+package edge
+
+type _ICoreWebView2ServerCertificateErrorDetectedEventHandlerVtbl struct {
+	_IUnknownVtbl
+	Invoke ComProc
+}
+
+type ICoreWebView2ServerCertificateErrorDetectedEventHandler struct {
+	vtbl *_ICoreWebView2ServerCertificateErrorDetectedEventHandlerVtbl
+	impl ICoreWebView2ServerCertificateErrorDetectedEventHandlerImpl
+}
+
+func ICoreWebView2ServerCertificateErrorDetectedEventHandlerIUnknownQueryInterface(this *ICoreWebView2ServerCertificateErrorDetectedEventHandler, refiid, object uintptr) uintptr {
+	return this.impl.QueryInterface(refiid, object)
+}
+
+func ICoreWebView2ServerCertificateErrorDetectedEventHandlerIUnknownAddRef(this *ICoreWebView2ServerCertificateErrorDetectedEventHandler) uintptr {
+	return this.impl.AddRef()
+}
+
+func ICoreWebView2ServerCertificateErrorDetectedEventHandlerIUnknownRelease(this *ICoreWebView2ServerCertificateErrorDetectedEventHandler) uintptr {
+	return this.impl.Release()
+}
+
+func ICoreWebView2ServerCertificateErrorDetectedEventHandlerInvoke(this *ICoreWebView2ServerCertificateErrorDetectedEventHandler, sender *ICoreWebView2, args *ICoreWebView2ServerCertificateErrorDetectedEventArgs) uintptr {
+	return this.impl.ServerCertificateErrorDetected(sender, args)
+}
+
+type ICoreWebView2ServerCertificateErrorDetectedEventHandlerImpl interface {
+	IUnknownImpl
+	ServerCertificateErrorDetected(sender *ICoreWebView2, args *ICoreWebView2ServerCertificateErrorDetectedEventArgs) uintptr
+}
+
+var ICoreWebView2ServerCertificateErrorDetectedEventHandlerFn = _ICoreWebView2ServerCertificateErrorDetectedEventHandlerVtbl{
+	_IUnknownVtbl{
+		NewComProc(ICoreWebView2ServerCertificateErrorDetectedEventHandlerIUnknownQueryInterface),
+		NewComProc(ICoreWebView2ServerCertificateErrorDetectedEventHandlerIUnknownAddRef),
+		NewComProc(ICoreWebView2ServerCertificateErrorDetectedEventHandlerIUnknownRelease),
+	},
+	NewComProc(ICoreWebView2ServerCertificateErrorDetectedEventHandlerInvoke),
+}
+
+func newICoreWebView2ServerCertificateErrorDetectedEventHandler(impl ICoreWebView2ServerCertificateErrorDetectedEventHandlerImpl) *ICoreWebView2ServerCertificateErrorDetectedEventHandler {
+	return &ICoreWebView2ServerCertificateErrorDetectedEventHandler{
+		vtbl: &ICoreWebView2ServerCertificateErrorDetectedEventHandlerFn,
+		impl: impl,
+	}
+}
