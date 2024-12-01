@@ -82,7 +82,7 @@ func registerVTableInternal[TParent, T IUnknown](guid string, isInternal bool, f
 		Name:    tName,
 		ComGUID: comGuid.String(),
 	}
-	vTable.ComVTable, vTable.ComProcs = allocUintptrObject(parentProcsCount + len(fns))
+	vTable.ComVTable, vTable.ComProcs = AllocUintptrObject(parentProcsCount + len(fns))
 
 	for i, proc := range parentProcs {
 		vTable.ComProcs[i] = proc

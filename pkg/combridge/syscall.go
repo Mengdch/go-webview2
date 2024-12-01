@@ -16,7 +16,7 @@ var (
 	uintptrSize = unsafe.Sizeof(uintptr(0))
 )
 
-func allocUintptrObject(size int) (uintptr, []uintptr) {
+func AllocUintptrObject(size int) (uintptr, []uintptr) {
 	v := globalAlloc(uintptr(size) * uintptrSize)
 	slice := unsafe.Slice((*uintptr)(unsafe.Pointer(v)), size)
 	return v, slice

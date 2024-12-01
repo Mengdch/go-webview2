@@ -51,6 +51,23 @@ func New2[T IUnknown, T2 IUnknown](obj T, obj2 T2) *ComObject[T] {
 	)
 	return newComObject[T](cObj)
 }
+func New3[T IUnknown, T2 IUnknown, T3 IUnknown](obj T, obj2 T2, obj3 T3) *ComObject[T] {
+	cObj := new(
+		ifceDef[T]{obj},
+		ifceDef[T2]{obj2},
+		ifceDef[T3]{obj3},
+	)
+	return newComObject[T](cObj)
+}
+func New4[T IUnknown, T2 IUnknown, T3 IUnknown, T4 IUnknown](obj T, obj2 T2, obj3 T3, obj4 T4) *ComObject[T] {
+	cObj := new(
+		ifceDef[T]{obj},
+		ifceDef[T2]{obj2},
+		ifceDef[T3]{obj3},
+		ifceDef[T4]{obj4},
+	)
+	return newComObject[T](cObj)
+}
 
 // new returns a new ComObject which implements multiple specified Com Interfaces, com calls will be redirected
 // to the specified go interfaces accordingly.
@@ -93,7 +110,7 @@ func new(impls ...ifceImpl) *comObject {
 			continue
 		}
 
-		ifceP, ifcePSlice := allocUintptrObject(1)
+		ifceP, ifcePSlice := AllocUintptrObject(1)
 		ifcePSlice[0] = vtable.ComVTable
 		cObj.ifcesImpl[i] = comInterfaceDesc{ifceP, ifceDef.impl()}
 	}
@@ -110,7 +127,7 @@ func new(impls ...ifceImpl) *comObject {
 func newComObject[T IUnknown](comObj *comObject) *ComObject[T] {
 	c := &ComObject[T]{obj: comObj}
 	// Make sure to async release since release needs locks and might block the finalizer goroutine for a longer period
-	runtime.SetFinalizer(c, func(obj *ComObject[T]) { obj.close(true) })
+	//runtime.SetFinalizer(c, func(obj *ComObject[T]) { obj.close(true) })
 	return c
 }
 
