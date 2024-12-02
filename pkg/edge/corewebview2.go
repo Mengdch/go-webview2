@@ -555,9 +555,7 @@ func (i *ICoreWebView2) SetMuted(val bool) error {
 func (i *ICoreWebView2) GetFaviconUri() (string, error) {
 	return i.GetICoreWebView2_15().GetFaviconUri()
 }
-func (i *ICoreWebView2) GetFavicon(format COREWEBVIEW2_FAVICON_IMAGE_FORMAT, completedHandler *ICoreWebView2GetFaviconCompletedHandler) error {
-	return i.GetICoreWebView2_15().GetFavicon(format, completedHandler)
-}
+
 func (i *ICoreWebView2) CallDevToolsProtocolMethod(methodName string, parametersAsJson string, handler *ICoreWebView2CallDevToolsProtocolMethodCompletedHandler) error {
 
 	// Convert string 'methodName' to *uint16

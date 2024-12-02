@@ -70,19 +70,6 @@ func (i *ICoreWebView2CompositionController) SendMouseInput(eventKind COREWEBVIE
 	return err
 }
 
-func (i *ICoreWebView2CompositionController) SendPointerInput(eventKind COREWEBVIEW2_POINTER_EVENT_KIND, pointerInfo *ICoreWebView2PointerInfo) error {
-
-	hr, _, err := i.vtbl.SendPointerInput.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(eventKind),
-		uintptr(unsafe.Pointer(pointerInfo)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return syscall.Errno(hr)
-	}
-	return err
-}
-
 func (i *ICoreWebView2CompositionController) GetCursor() (HCURSOR, error) {
 
 	var cursor HCURSOR

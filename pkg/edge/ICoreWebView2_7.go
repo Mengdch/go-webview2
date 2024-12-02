@@ -3,7 +3,6 @@
 package edge
 
 import (
-	"golang.org/x/sys/windows"
 	"unsafe"
 )
 
@@ -30,24 +29,4 @@ func (i *ICoreWebView2) GetICoreWebView2_7() *ICoreWebView2_7 {
 
 func (e *Chromium) GetICoreWebView2_7() *ICoreWebView2_7 {
 	return e.webview.GetICoreWebView2_7()
-}
-
-func (i *ICoreWebView2_7) PrintToPdf(resultFilePath string, printSettings *ICoreWebView2PrintSettings, handler *ICoreWebView2PrintToPdfCompletedHandler) error {
-
-	// Convert string 'resultFilePath' to *uint16
-	_resultFilePath, err := UTF16PtrFromString(resultFilePath)
-	if err != nil {
-		return err
-	}
-
-	_, _, err = i.vtbl.PrintToPdf.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(_resultFilePath)),
-		uintptr(unsafe.Pointer(printSettings)),
-		uintptr(unsafe.Pointer(handler)),
-	)
-	if err != windows.ERROR_SUCCESS {
-		return err
-	}
-	return nil
 }

@@ -3,7 +3,7 @@
 package edge
 
 import (
-	"math"
+	"syscall"
 	"unsafe"
 
 	"github.com/Mengdch/go-webview2/internal/w32"
@@ -118,21 +118,6 @@ func (i *ICoreWebView2Controller) MoveFocus(reason COREWEBVIEW2_MOVE_FOCUS_REASO
 	return nil
 }
 
-func (i *ICoreWebView2Controller) AddGotFocus(eventHandler *ICoreWebView2FocusChangedEventHandler) (EventRegistrationToken, error) {
-
-	var token EventRegistrationToken
-
-	hr, _, err := i.vtbl.AddGotFocus.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(eventHandler)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return EventRegistrationToken{}, syscall.Errno(hr)
-	}
-	return token, err
-}
-
 func (i *ICoreWebView2Controller) AddAcceleratorKeyPressed(eventHandler *ICoreWebView2AcceleratorKeyPressedEventHandler, token *_EventRegistrationToken) error {
 	var err error
 	_, _, err = i.vtbl.AddAcceleratorKeyPressed.Call(
@@ -177,32 +162,4 @@ func (i *ICoreWebView2Controller) Close() error {
 		return syscall.Errno(hr)
 	}
 	return err
-}
-func (i *ICoreWebView2Controller) AddLostFocus(eventHandler *ICoreWebView2FocusChangedEventHandler) (EventRegistrationToken, error) {
-
-	var token EventRegistrationToken
-
-	hr, _, err := i.vtbl.AddLostFocus.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(eventHandler)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return EventRegistrationToken{}, syscall.Errno(hr)
-	}
-	return token, err
-}
-func (i *ICoreWebView2Controller) AddMoveFocusRequested(eventHandler *ICoreWebView2MoveFocusRequestedEventHandler) (EventRegistrationToken, error) {
-
-	var token EventRegistrationToken
-
-	hr, _, err := i.vtbl.AddMoveFocusRequested.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(eventHandler)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return EventRegistrationToken{}, syscall.Errno(hr)
-	}
-	return token, err
 }

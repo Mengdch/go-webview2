@@ -3,8 +3,6 @@
 package edge
 
 import (
-	"golang.org/x/sys/windows"
-	"syscall"
 	"unsafe"
 )
 
@@ -31,15 +29,4 @@ func (i *ICoreWebView2) GetICoreWebView2_13() *ICoreWebView2_13 {
 
 func (e *Chromium) GetICoreWebView2_13() *ICoreWebView2_13 {
 	return e.webview.GetICoreWebView2_13()
-}
-func (i *ICoreWebView2_13) GetProfile() (*ICoreWebView2Profile, error) {
-	var value *ICoreWebView2Profile
-	hr, _, _ := i.vtbl.GetProfile.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(&value)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return nil, syscall.Errno(hr)
-	}
-	return value, nil
 }

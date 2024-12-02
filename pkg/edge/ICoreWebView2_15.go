@@ -35,20 +35,6 @@ func (i *ICoreWebView2) GetICoreWebView2_15() *ICoreWebView2_15 {
 func (e *Chromium) GetICoreWebView2_15() *ICoreWebView2_15 {
 	return e.webview.GetICoreWebView2_15()
 }
-func (i *ICoreWebView2_15) AddFaviconChanged(eventHandler *ICoreWebView2FaviconChangedEventHandler) (EventRegistrationToken, error) {
-
-	var token EventRegistrationToken
-
-	hr, _, err := i.vtbl.AddFaviconChanged.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(eventHandler)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return EventRegistrationToken{}, syscall.Errno(hr)
-	}
-	return token, err
-}
 
 func (i *ICoreWebView2_15) RemoveFaviconChanged(token EventRegistrationToken) error {
 
@@ -85,16 +71,3 @@ const (
 	COREWEBVIEW2_FAVICON_IMAGE_FORMAT_PNG  = 0
 	COREWEBVIEW2_FAVICON_IMAGE_FORMAT_JPEG = 1
 )
-
-func (i *ICoreWebView2_15) GetFavicon(format COREWEBVIEW2_FAVICON_IMAGE_FORMAT, completedHandler *ICoreWebView2GetFaviconCompletedHandler) error {
-
-	hr, _, err := i.vtbl.GetFavicon.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(format),
-		uintptr(unsafe.Pointer(completedHandler)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return syscall.Errno(hr)
-	}
-	return err
-}

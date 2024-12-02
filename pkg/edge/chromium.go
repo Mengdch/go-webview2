@@ -36,29 +36,20 @@ type Chromium struct {
 	webResourceRequested             *iCoreWebView2WebResourceRequestedEventHandler
 	acceleratorKeyPressed            *ICoreWebView2AcceleratorKeyPressedEventHandler
 	navigationCompleted              *ICoreWebView2NavigationCompletedEventHandler
-	navigationStarting               *ICoreWebView2NavigationStartingEventHandler
 	documentTitleChanged             *ICoreWebView2DocumentTitleChangedEventHandler
-	faviconChanged                   *ICoreWebView2FaviconChangedEventHandler
-	faviconCompleted                 *ICoreWebView2GetFaviconCompletedHandler
 	downloadStart                    *ICoreWebView2DownloadStartingEventHandler
 	downloadStateChanged             *ICoreWebView2StateChangedEventHandler
 	downloadReceivedChanged          *ICoreWebView2BytesReceivedChangedEventHandler
 	sourceChanged                    *ICoreWebView2SourceChangedEventHandler
-	newWindow                        *ICoreWebView2NewWindowRequestedEventHandler
-	historyChanged                   *ICoreWebView2HistoryChangedEventHandler
 	processFailed                    *ICoreWebView2ProcessFailedEventHandler
 	certificateError                 *ICoreWebView2ServerCertificateErrorDetectedEventHandler
 	clearCertificate                 *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler
-	printPdfCompleted                *ICoreWebView2PrintToPdfCompletedHandler
 	callDelMethodCompleted           *ICoreWebView2CallDevToolsProtocolMethodCompletedHandler
 	zoomFactorChanged                *iCoreWebView2ZoomFactorChangedEventHandler
-	focusChanged                     *ICoreWebView2FocusChangedEventHandler
-	lostFocusChanged                 *ICoreWebView2FocusChangedEventHandler
 	contextMenuRequested             *ICoreWebView2ContextMenuRequestedEventHandler
 	windowCloseRequested             *ICoreWebView2WindowCloseRequestedEventHandler
 	responseReceived                 *ICoreWebView2WebResourceResponseReceivedEventHandler
 	trySuspendCompleted              *ICoreWebView2TrySuspendCompletedHandler
-	moveFocusRequested               *ICoreWebView2MoveFocusRequestedEventHandler
 
 	environment            *ICoreWebView2Environment
 	padding                Rect
@@ -80,7 +71,6 @@ type Chromium struct {
 	MessageWithAdditionalObjectsCallback        func(message string, sender *ICoreWebView2, args *ICoreWebView2WebMessageReceivedEventArgs)
 	WebResourceRequestedCallback                func(request *ICoreWebView2WebResourceRequest, args *ICoreWebView2WebResourceRequestedEventArgs)
 	NavigationCompletedCallback                 func(sender *ICoreWebView2, args *ICoreWebView2NavigationCompletedEventArgs)
-	NavigationStartingCallback                  func(sender *ICoreWebView2, args *ICoreWebView2NavigationStartingEventArgs)
 	DocumentTitleChangedCallback                func(sender *ICoreWebView2, args *IUnknown)
 	FaviconChangedCallback                      func(sender *ICoreWebView2, args *IUnknown)
 	GetFaviconCompletedCallback                 func(errorCode uintptr, faviconStream *IStream)
@@ -88,10 +78,9 @@ type Chromium struct {
 	DownloadStartCallback                       func(sender *ICoreWebView2, args *ICoreWebView2DownloadStartingEventArgs)
 	DownloadStateChangedCallback                func(sender *ICoreWebView2DownloadOperation, args *IUnknown)
 	DownloadReceivedChangedCallback             func(sender *ICoreWebView2DownloadOperation, args *IUnknown)
-	NewWindowCallback                           func(sender *ICoreWebView2, args *ICoreWebView2NewWindowRequestedEventArgs)
 	HistoryChangedCallback                      func(sender *ICoreWebView2, args *IUnknown)
 	ProcessFailedCallback                       func(sender *ICoreWebView2, args *ICoreWebView2ProcessFailedEventArgs)
-	ContainsFullScreenElementChangedCallback func(sender *ICoreWebView2, args *ICoreWebView2ContainsFullScreenElementChangedEventArgs)
+	ContainsFullScreenElementChangedCallback    func(sender *ICoreWebView2, args *ICoreWebView2ContainsFullScreenElementChangedEventArgs)
 	AcceleratorKeyCallback                      func(uint, int) bool
 	CertificateError                            func(sender *ICoreWebView2, args *ICoreWebView2ServerCertificateErrorDetectedEventArgs)
 	ClearCertificate                            func(errorCode uintptr)
@@ -101,7 +90,6 @@ type Chromium struct {
 	CallDevToolsProtocolMethodCompletedCallback func(errorCode uintptr, returnObjectAsJson uintptr)
 	ContextMenuRequestedCallback                func(sender *ICoreWebView2, args *ICoreWebView2ContextMenuRequestedEventArgs)
 	WebResourceResponseReceivedCallback         func(sender *ICoreWebView2, args *ICoreWebView2WebResourceResponseReceivedEventArgs)
-	MoveFocusRequestedCallback                  func(sender *ICoreWebView2Controller, args *ICoreWebView2MoveFocusRequestedEventArgs)
 	InitCompletedCallback                       func()
 
 	focus bool
@@ -130,30 +118,21 @@ func NewChromium() *Chromium {
 	e.webResourceRequested = newICoreWebView2WebResourceRequestedEventHandler(e)
 	e.acceleratorKeyPressed = newICoreWebView2AcceleratorKeyPressedEventHandler(e)
 	e.navigationCompleted = newICoreWebView2NavigationCompletedEventHandler(e)
-	e.navigationStarting = newICoreWebView2NavigationStartingEventHandler(e)
 	e.documentTitleChanged = newICoreWebView2DocumentTitleChangedEventHandler(e)
-	e.faviconChanged = newICoreWebView2FaviconChangedEventHandler(e)
 	e.downloadStart = newICoreWebView2DownloadStartingEventHandler(e)
 	e.downloadStateChanged = newICoreWebView2StateChangedEventHandler(e)
 	e.downloadReceivedChanged = newICoreWebView2BytesReceivedChangedEventHandler(e)
 	e.sourceChanged = newICoreWebView2SourceChangedEventHandler(e)
-	e.newWindow = newICoreWebView2NewWindowRequestedEventHandler(e)
-	e.historyChanged = newICoreWebView2HistoryChangedEventHandler(e)
-	e.faviconCompleted = newICoreWebView2GetFaviconCompletedHandler(e)
 	e.processFailed = newICoreWebView2ProcessFailedEventHandler(e)
 	e.containsFullScreenElementChanged = newICoreWebView2ContainsFullScreenElementChangedEventHandler(e)
 	e.certificateError = newICoreWebView2ServerCertificateErrorDetectedEventHandler(e)
 	e.clearCertificate = newICoreWebView2ClearServerCertificateErrorActionsCompletedHandler(e)
-	e.printPdfCompleted = newICoreWebView2PrintToPdfCompletedHandler(e)
 	e.zoomFactorChanged = newICoreWebView2ZoomFactorChangedEventHandler(e)
 	e.callDelMethodCompleted = newICoreWebView2CallDevToolsProtocolMethodCompletedHandler(e)
-	e.focusChanged = newICoreWebView2FocusChangedEventHandler(e)
-	e.lostFocusChanged = newICoreWebView2FocusChangedEventHandler(e)
 	e.contextMenuRequested = newICoreWebView2ContextMenuRequestedEventHandler(e)
 	e.windowCloseRequested = newICoreWebView2WindowCloseRequestedEventHandler(e)
 	e.responseReceived = newICoreWebView2WebResourceResponseReceivedEventHandler(e)
 	e.trySuspendCompleted = newICoreWebView2TrySuspendCompletedHandler(e)
-	e.moveFocusRequested = newICoreWebView2MoveFocusRequestedEventHandler(e)
 	/*
 		// Pinner seems to panic in some cases as reported on Discord, maybe during shutdown when GC detects pinned objects
 		// to be released that have not been unpinned.
@@ -364,32 +343,16 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 		uintptr(unsafe.Pointer(e.webResourceRequested)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	e.webview.vtbl.AddNavigationStarting.Call(
-		uintptr(unsafe.Pointer(e.webview)),
-		uintptr(unsafe.Pointer(e.navigationStarting)),
-		uintptr(unsafe.Pointer(&token)),
-	)
 	e.webview.vtbl.AddDocumentTitleChanged.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.documentTitleChanged)),
 		uintptr(unsafe.Pointer(&token)),
 	)
-	e.GetICoreWebView2_15().AddFaviconChanged(e.faviconChanged)
 	e.GetICoreWebView2_4().AddDownloadStarting(e.downloadStart)
 	e.webview.GetICoreWebView2_2().AddWebResourceResponseReceived(e.responseReceived)
 	e.webview.vtbl.AddSourceChanged.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.sourceChanged)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	e.webview.vtbl.AddNewWindowRequested.Call(
-		uintptr(unsafe.Pointer(e.webview)),
-		uintptr(unsafe.Pointer(e.newWindow)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	e.webview.vtbl.AddHistoryChanged.Call(
-		uintptr(unsafe.Pointer(e.webview)),
-		uintptr(unsafe.Pointer(e.historyChanged)),
 		uintptr(unsafe.Pointer(&token)),
 	)
 	e.webview.vtbl.AddNavigationCompleted.Call(
@@ -409,8 +372,6 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 	)
 	e.webview.GetICoreWebView2_14().AddServerCertificateErrorDetected(e.certificateError)
 	e.controller.AddZoomFactorChanged(e.zoomFactorChanged)
-	e.controller.AddGotFocus(e.focusChanged)
-	e.controller.AddLostFocus(e.lostFocusChanged)
 	//e.controller.AddMoveFocusRequested(e.moveFocusRequested)
 
 	e.controller.AddAcceleratorKeyPressed(e.acceleratorKeyPressed, &token)
@@ -610,12 +571,7 @@ func (e *Chromium) NavigationCompleted(sender *ICoreWebView2, args *ICoreWebView
 	}
 	return 0
 }
-func (e *Chromium) NavigationStarting(sender *ICoreWebView2, args *ICoreWebView2NavigationStartingEventArgs) uintptr {
-	if e.NavigationStartingCallback != nil {
-		e.NavigationStartingCallback(sender, args)
-	}
-	return 0
-}
+
 func (e *Chromium) DocumentTitleChanged(sender *ICoreWebView2, args *IUnknown) uintptr {
 	if e.DocumentTitleChangedCallback != nil {
 		e.DocumentTitleChangedCallback(sender, args)
@@ -785,16 +741,6 @@ func (e *Chromium) SetMuted(allow bool) error {
 	return e.webview.SetMuted(allow)
 }
 
-func (e *Chromium) NewWindowRequested(sender *ICoreWebView2, args *ICoreWebView2NewWindowRequestedEventArgs) uintptr {
-	if e.NewWindowCallback != nil {
-		e.NewWindowCallback(sender, args)
-	}
-	return 0
-}
-
-func (e *Chromium) FaviconCompleted() *ICoreWebView2GetFaviconCompletedHandler {
-	return e.faviconCompleted
-}
 func (e *Chromium) ClearCertificateCompleted() *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler {
 	return e.clearCertificate
 }
@@ -805,9 +751,7 @@ func (e *Chromium) DownloadStateChanged() *ICoreWebView2StateChangedEventHandler
 func (e *Chromium) DownloadReceivedChanged() *ICoreWebView2BytesReceivedChangedEventHandler {
 	return e.downloadReceivedChanged
 }
-func (e *Chromium) PrintToPdf(fp string) error {
-	return e.GetICoreWebView2_7().PrintToPdf(fp, nil, e.printPdfCompleted)
-}
+
 func (e *Chromium) GetAllowExternalDrag() (bool, error) {
 	if !hasCapability(e.webview2RuntimeVersion, AllowExternalDrop) {
 		return false, UnsupportedCapabilityError
@@ -859,11 +803,5 @@ func (e *Chromium) WebResourceResponseReceived(sender *ICoreWebView2, args *ICor
 }
 func (e *Chromium) TrySuspendCompleted(errorCode uintptr, isSuccessful bool) uintptr {
 	fmt.Println("TrySuspendCompleted", errorCode, isSuccessful)
-	return 0
-}
-func (e *Chromium) MoveFocusRequested(sender *ICoreWebView2Controller, args *ICoreWebView2MoveFocusRequestedEventArgs) uintptr {
-	if e.MoveFocusRequestedCallback != nil {
-		e.MoveFocusRequestedCallback(sender, args)
-	}
 	return 0
 }

@@ -61,21 +61,6 @@ func (i *ICoreWebView2DownloadOperation) RemoveBytesReceivedChanged(token EventR
 	return err
 }
 
-func (i *ICoreWebView2DownloadOperation) AddEstimatedEndTimeChanged(eventHandler *ICoreWebView2EstimatedEndTimeChangedEventHandler) (EventRegistrationToken, error) {
-
-	var token EventRegistrationToken
-
-	hr, _, err := i.vtbl.AddEstimatedEndTimeChanged.Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(eventHandler)),
-		uintptr(unsafe.Pointer(&token)),
-	)
-	if windows.Handle(hr) != windows.S_OK {
-		return EventRegistrationToken{}, syscall.Errno(hr)
-	}
-	return token, err
-}
-
 func (i *ICoreWebView2DownloadOperation) RemoveEstimatedEndTimeChanged(token EventRegistrationToken) error {
 
 	hr, _, err := i.vtbl.RemoveEstimatedEndTimeChanged.Call(
