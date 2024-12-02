@@ -3,10 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Mengdch/vk"
-	"github.com/Mengdch/win"
 	"github.com/Mengdch/go-webview2/pkg/edge"
 	"github.com/Mengdch/go-webview2/webviewloader"
+	"github.com/Mengdch/win"
 	"runtime"
 	"syscall"
 	"unsafe"
@@ -82,7 +81,7 @@ func main() {
 	}
 	procMap[hWnd] = syscall.NewCallbackCDecl(ps)
 	win.ShowWindow(hWnd, win.SW_SHOW)
-	var parentRect vk.RECT
+	var parentRect win.RECT
 	win.GetClientRect(hWnd, &parentRect)
 	vWnd := win.CreateWindowEx(0, classViewNamePtr, windowViewNamePtr,
 		win.WS_CHILD|win.WS_CLIPSIBLINGS|win.WS_CLIPCHILDREN|win.WS_VISIBLE, 0, 0, parentRect.Width(),

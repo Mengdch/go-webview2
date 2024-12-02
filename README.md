@@ -3,7 +3,7 @@ This is a locally maintained fork of [go-webview2](https://github.com/wailsapp/g
 that is intended to be used with my [browser](https://github.com/mengdch/browser) applications. 
 
 example:
-You need to import [vk](https://github.com/mengdch/vk) and [win](https://github.com/mengdch/win) then execute
+You need to import [win](https://github.com/mengdch/win) then execute
 ```shell
 go run main/main.go
 ```
