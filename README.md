@@ -39,3 +39,7 @@ This will use go-winloader to load an embedded copy of WebView2Loader.dll.
 
 If this does not work, please try running from a directory that has an appropriate copy of `WebView2Loader.dll` for your
 GOARCH. If _that_ worked, *please* file a bug so we can figure out what's wrong with go-winloader :)
+
+# 感谢
+ [Jetbrains提供Goland开发工具](https://jb.gg/OpenSourceSupport)
+ ![](https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png)
