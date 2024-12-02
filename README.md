@@ -1,14 +1,11 @@
 
-This is a locally maintained fork of [go-webview2](https://github.com/jchv/go-webview2) 
-that is intended to be used with Wails applications. It is not intended to be used
-as a standalone package.
+This is a locally maintained fork of [go-webview2](https://github.com/wailsapp/go-webview2) 
+that is intended to be used with my [browser](https://github.com/mengdch/browser) applications. 
 
-----------------
-
-To update this package, run the following commands:
-
-```bash
-task update
+example:
+You need to import [vk](https://github.com/mengdch/vk) and [win](https://github.com/mengdch/win) then execute
+```shell
+go run main/main.go
 ```
 
 ----------------
