@@ -41,6 +41,7 @@ type Chromium struct {
 	downloadStateChanged             *ICoreWebView2StateChangedEventHandler
 	downloadReceivedChanged          *ICoreWebView2BytesReceivedChangedEventHandler
 	sourceChanged                    *ICoreWebView2SourceChangedEventHandler
+	newWindow                        *ICoreWebView2NewWindowRequestedEventHandler
 	processFailed                    *ICoreWebView2ProcessFailedEventHandler
 	certificateError                 *ICoreWebView2ServerCertificateErrorDetectedEventHandler
 	clearCertificate                 *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler
@@ -78,6 +79,7 @@ type Chromium struct {
 	DownloadStartCallback                       func(sender *ICoreWebView2, args *ICoreWebView2DownloadStartingEventArgs)
 	DownloadStateChangedCallback                func(sender *ICoreWebView2DownloadOperation, args *IUnknown)
 	DownloadReceivedChangedCallback             func(sender *ICoreWebView2DownloadOperation, args *IUnknown)
+	NewWindowCallback                           func(sender *ICoreWebView2, args *ICoreWebView2NewWindowRequestedEventArgs)
 	HistoryChangedCallback                      func(sender *ICoreWebView2, args *IUnknown)
 	ProcessFailedCallback                       func(sender *ICoreWebView2, args *ICoreWebView2ProcessFailedEventArgs)
 	ContainsFullScreenElementChangedCallback    func(sender *ICoreWebView2, args *ICoreWebView2ContainsFullScreenElementChangedEventArgs)
@@ -123,6 +125,7 @@ func NewChromium() *Chromium {
 	e.downloadStateChanged = newICoreWebView2StateChangedEventHandler(e)
 	e.downloadReceivedChanged = newICoreWebView2BytesReceivedChangedEventHandler(e)
 	e.sourceChanged = newICoreWebView2SourceChangedEventHandler(e)
+	e.newWindow = newICoreWebView2NewWindowRequestedEventHandler(e)
 	e.processFailed = newICoreWebView2ProcessFailedEventHandler(e)
 	e.containsFullScreenElementChanged = newICoreWebView2ContainsFullScreenElementChangedEventHandler(e)
 	e.certificateError = newICoreWebView2ServerCertificateErrorDetectedEventHandler(e)
@@ -353,6 +356,11 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 	e.webview.vtbl.AddSourceChanged.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.sourceChanged)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddNewWindowRequested.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.newWindow)),
 		uintptr(unsafe.Pointer(&token)),
 	)
 	e.webview.vtbl.AddNavigationCompleted.Call(
@@ -739,6 +747,13 @@ func (e *Chromium) AllowExternalDrag(allow bool) error {
 
 func (e *Chromium) SetMuted(allow bool) error {
 	return e.webview.SetMuted(allow)
+}
+
+func (e *Chromium) NewWindowRequested(sender *ICoreWebView2, args *ICoreWebView2NewWindowRequestedEventArgs) uintptr {
+	if e.NewWindowCallback != nil {
+		e.NewWindowCallback(sender, args)
+	}
+	return 0
 }
 
 func (e *Chromium) ClearCertificateCompleted() *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler {
