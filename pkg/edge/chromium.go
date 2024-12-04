@@ -36,6 +36,7 @@ type Chromium struct {
 	webResourceRequested             *iCoreWebView2WebResourceRequestedEventHandler
 	acceleratorKeyPressed            *ICoreWebView2AcceleratorKeyPressedEventHandler
 	navigationCompleted              *ICoreWebView2NavigationCompletedEventHandler
+	navigationStarting               *ICoreWebView2NavigationStartingEventHandler
 	documentTitleChanged             *ICoreWebView2DocumentTitleChangedEventHandler
 	downloadStart                    *ICoreWebView2DownloadStartingEventHandler
 	downloadStateChanged             *ICoreWebView2StateChangedEventHandler
@@ -72,6 +73,7 @@ type Chromium struct {
 	MessageWithAdditionalObjectsCallback        func(message string, sender *ICoreWebView2, args *ICoreWebView2WebMessageReceivedEventArgs)
 	WebResourceRequestedCallback                func(request *ICoreWebView2WebResourceRequest, args *ICoreWebView2WebResourceRequestedEventArgs)
 	NavigationCompletedCallback                 func(sender *ICoreWebView2, args *ICoreWebView2NavigationCompletedEventArgs)
+	NavigationStartingCallback                  func(sender *ICoreWebView2, args *ICoreWebView2NavigationStartingEventArgs)
 	DocumentTitleChangedCallback                func(sender *ICoreWebView2, args *IUnknown)
 	FaviconChangedCallback                      func(sender *ICoreWebView2, args *IUnknown)
 	GetFaviconCompletedCallback                 func(errorCode uintptr, faviconStream *IStream)
@@ -120,6 +122,7 @@ func NewChromium() *Chromium {
 	e.webResourceRequested = newICoreWebView2WebResourceRequestedEventHandler(e)
 	e.acceleratorKeyPressed = newICoreWebView2AcceleratorKeyPressedEventHandler(e)
 	e.navigationCompleted = newICoreWebView2NavigationCompletedEventHandler(e)
+	e.navigationStarting = newICoreWebView2NavigationStartingEventHandler(e)
 	e.documentTitleChanged = newICoreWebView2DocumentTitleChangedEventHandler(e)
 	e.downloadStart = newICoreWebView2DownloadStartingEventHandler(e)
 	e.downloadStateChanged = newICoreWebView2StateChangedEventHandler(e)
@@ -344,6 +347,11 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 	e.webview.vtbl.AddWebResourceRequested.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.webResourceRequested)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddNavigationStarting.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.navigationStarting)),
 		uintptr(unsafe.Pointer(&token)),
 	)
 	e.webview.vtbl.AddDocumentTitleChanged.Call(
@@ -579,7 +587,12 @@ func (e *Chromium) NavigationCompleted(sender *ICoreWebView2, args *ICoreWebView
 	}
 	return 0
 }
-
+func (e *Chromium) NavigationStarting(sender *ICoreWebView2, args *ICoreWebView2NavigationStartingEventArgs) uintptr {
+	if e.NavigationStartingCallback != nil {
+		e.NavigationStartingCallback(sender, args)
+	}
+	return 0
+}
 func (e *Chromium) DocumentTitleChanged(sender *ICoreWebView2, args *IUnknown) uintptr {
 	if e.DocumentTitleChangedCallback != nil {
 		e.DocumentTitleChangedCallback(sender, args)
