@@ -43,6 +43,7 @@ type Chromium struct {
 	downloadReceivedChanged          *ICoreWebView2BytesReceivedChangedEventHandler
 	sourceChanged                    *ICoreWebView2SourceChangedEventHandler
 	newWindow                        *ICoreWebView2NewWindowRequestedEventHandler
+	historyChanged                   *ICoreWebView2HistoryChangedEventHandler
 	processFailed                    *ICoreWebView2ProcessFailedEventHandler
 	certificateError                 *ICoreWebView2ServerCertificateErrorDetectedEventHandler
 	clearCertificate                 *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler
@@ -129,6 +130,7 @@ func NewChromium() *Chromium {
 	e.downloadReceivedChanged = newICoreWebView2BytesReceivedChangedEventHandler(e)
 	e.sourceChanged = newICoreWebView2SourceChangedEventHandler(e)
 	e.newWindow = newICoreWebView2NewWindowRequestedEventHandler(e)
+	e.historyChanged = newICoreWebView2HistoryChangedEventHandler(e)
 	e.processFailed = newICoreWebView2ProcessFailedEventHandler(e)
 	e.containsFullScreenElementChanged = newICoreWebView2ContainsFullScreenElementChangedEventHandler(e)
 	e.certificateError = newICoreWebView2ServerCertificateErrorDetectedEventHandler(e)
@@ -369,6 +371,11 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 	e.webview.vtbl.AddNewWindowRequested.Call(
 		uintptr(unsafe.Pointer(e.webview)),
 		uintptr(unsafe.Pointer(e.newWindow)),
+		uintptr(unsafe.Pointer(&token)),
+	)
+	e.webview.vtbl.AddHistoryChanged.Call(
+		uintptr(unsafe.Pointer(e.webview)),
+		uintptr(unsafe.Pointer(e.historyChanged)),
 		uintptr(unsafe.Pointer(&token)),
 	)
 	e.webview.vtbl.AddNavigationCompleted.Call(
