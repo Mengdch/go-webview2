@@ -49,6 +49,8 @@ type Chromium struct {
 	clearCertificate                 *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler
 	callDelMethodCompleted           *ICoreWebView2CallDevToolsProtocolMethodCompletedHandler
 	zoomFactorChanged                *iCoreWebView2ZoomFactorChangedEventHandler
+	focusChanged                     *ICoreWebView2FocusChangedEventHandler
+	lostFocusChanged                 *ICoreWebView2FocusChangedEventHandler
 	contextMenuRequested             *ICoreWebView2ContextMenuRequestedEventHandler
 	windowCloseRequested             *ICoreWebView2WindowCloseRequestedEventHandler
 	responseReceived                 *ICoreWebView2WebResourceResponseReceivedEventHandler
@@ -137,6 +139,8 @@ func NewChromium() *Chromium {
 	e.clearCertificate = newICoreWebView2ClearServerCertificateErrorActionsCompletedHandler(e)
 	e.zoomFactorChanged = newICoreWebView2ZoomFactorChangedEventHandler(e)
 	e.callDelMethodCompleted = newICoreWebView2CallDevToolsProtocolMethodCompletedHandler(e)
+	e.focusChanged = newICoreWebView2FocusChangedEventHandler(e)
+	e.lostFocusChanged = newICoreWebView2FocusChangedEventHandler(e)
 	e.contextMenuRequested = newICoreWebView2ContextMenuRequestedEventHandler(e)
 	e.windowCloseRequested = newICoreWebView2WindowCloseRequestedEventHandler(e)
 	e.responseReceived = newICoreWebView2WebResourceResponseReceivedEventHandler(e)
@@ -395,6 +399,8 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 	)
 	e.webview.GetICoreWebView2_14().AddServerCertificateErrorDetected(e.certificateError)
 	e.controller.AddZoomFactorChanged(e.zoomFactorChanged)
+	e.controller.AddGotFocus(e.focusChanged)
+	e.controller.AddLostFocus(e.lostFocusChanged)
 	//e.controller.AddMoveFocusRequested(e.moveFocusRequested)
 
 	e.controller.AddAcceleratorKeyPressed(e.acceleratorKeyPressed, &token)
