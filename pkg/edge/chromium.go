@@ -38,6 +38,8 @@ type Chromium struct {
 	navigationCompleted              *ICoreWebView2NavigationCompletedEventHandler
 	navigationStarting               *ICoreWebView2NavigationStartingEventHandler
 	documentTitleChanged             *ICoreWebView2DocumentTitleChangedEventHandler
+	faviconChanged                   *ICoreWebView2FaviconChangedEventHandler
+	faviconCompleted                 *ICoreWebView2GetFaviconCompletedHandler
 	downloadStart                    *ICoreWebView2DownloadStartingEventHandler
 	downloadStateChanged             *ICoreWebView2StateChangedEventHandler
 	downloadReceivedChanged          *ICoreWebView2BytesReceivedChangedEventHandler
@@ -127,12 +129,14 @@ func NewChromium() *Chromium {
 	e.navigationCompleted = newICoreWebView2NavigationCompletedEventHandler(e)
 	e.navigationStarting = newICoreWebView2NavigationStartingEventHandler(e)
 	e.documentTitleChanged = newICoreWebView2DocumentTitleChangedEventHandler(e)
+	e.faviconChanged = newICoreWebView2FaviconChangedEventHandler(e)
 	e.downloadStart = newICoreWebView2DownloadStartingEventHandler(e)
 	e.downloadStateChanged = newICoreWebView2StateChangedEventHandler(e)
 	e.downloadReceivedChanged = newICoreWebView2BytesReceivedChangedEventHandler(e)
 	e.sourceChanged = newICoreWebView2SourceChangedEventHandler(e)
 	e.newWindow = newICoreWebView2NewWindowRequestedEventHandler(e)
 	e.historyChanged = newICoreWebView2HistoryChangedEventHandler(e)
+	e.faviconCompleted = newICoreWebView2GetFaviconCompletedHandler(e)
 	e.processFailed = newICoreWebView2ProcessFailedEventHandler(e)
 	e.containsFullScreenElementChanged = newICoreWebView2ContainsFullScreenElementChangedEventHandler(e)
 	e.certificateError = newICoreWebView2ServerCertificateErrorDetectedEventHandler(e)
@@ -365,6 +369,7 @@ func (e *Chromium) CreateCoreWebView2ControllerCompleted(res uintptr, controller
 		uintptr(unsafe.Pointer(e.documentTitleChanged)),
 		uintptr(unsafe.Pointer(&token)),
 	)
+	e.GetICoreWebView2_15().AddFaviconChanged(e.faviconChanged)
 	e.GetICoreWebView2_4().AddDownloadStarting(e.downloadStart)
 	e.webview.GetICoreWebView2_2().AddWebResourceResponseReceived(e.responseReceived)
 	e.webview.vtbl.AddSourceChanged.Call(
@@ -782,6 +787,9 @@ func (e *Chromium) NewWindowRequested(sender *ICoreWebView2, args *ICoreWebView2
 	return 0
 }
 
+func (e *Chromium) FaviconCompleted() *ICoreWebView2GetFaviconCompletedHandler {
+	return e.faviconCompleted
+}
 func (e *Chromium) ClearCertificateCompleted() *ICoreWebView2ClearServerCertificateErrorActionsCompletedHandler {
 	return e.clearCertificate
 }
